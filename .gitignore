@@ -31,3 +31,14 @@
 # Debug files
 *.dSYM/
 *.su
+
+#folders
+Debug/
+firmware/
+obj/
+build/
+.vscode/
+.vs/
+
+# Ignore local & personal info
+user_config.local.h
