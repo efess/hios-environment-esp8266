@@ -42,3 +42,4 @@ build/
 
 # Ignore local & personal info
 user_config.local.h
+publish.sh

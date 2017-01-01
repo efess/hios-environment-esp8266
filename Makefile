@@ -14,11 +14,13 @@ SDK_BASE	?= c:/Espressif/ESP8266_SDK_200
 #Esptool.py path and port
 ESPTOOL		?= python C:/Espressif/esptool/esptool.py
 ESPPORT		?= COM4
+
+PUBLISH_SCRIPT	?= bash publish.sh
 #ESPPORT		?= /dev/tty.wchusbserial1410
 #ESPDELAY indicates seconds to wait between flashing the two binary images
 ESPDELAY	?= 3
-ESPBAUD		?= 115200
-#ESPBAUD		?= 460800
+#ESPBAUD		?= 115200
+ESPBAUD		?= 460800
 
 # 40m 26m 20m 80m
 ESP_FREQ = 80m
@@ -36,7 +38,7 @@ TARGET		?= esp_mqtt
 TARGET_LIB ?= libmqtt.a
 
 # which modules (subdirectories) of the project to include in compiling
-USER_MODULES		= user driver mqtt modules http upgrade websrv
+USER_MODULES		=  shared user driver mqtt modules http upgrade websrv
 USER_INC				= include
 USER_LIB				=
 
@@ -46,8 +48,6 @@ LIB_MODULES			= mqtt
 SDK_LIBDIR = lib
 SDK_LIBS = c gcc phy pp net80211 wpa main lwip crypto ssl json driver
 SDK_INC = include include/json
-
-
 
 # Output directors to store intermediate compiled files
 # relative to the project directory
@@ -229,7 +229,11 @@ $(APP_AR): $(OBJ)
 flash:
 	$(ESPTOOL) $(ESPTOOL_OPTS) $(ESPTOOL_WRITE)
 
-fast: all flash openport
+fast: all flash
+
+publish:
+	$(vecho) "Publishing firmware to server"
+	$(PUBLISH_SCRIPT) $(TARGET)-0x2000.bin
 
 openport:
 	$(vecho) "After flash, terminal will enter serial port screen"

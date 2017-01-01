@@ -117,7 +117,7 @@ static void ICACHE_FLASH_ATTR app_init(void)
   uart_init(BIT_RATE_115200, BIT_RATE_115200);
   print_info();
 
-  //http_listen(&httpServer, 8090);
+  web_listen(&webServer, 8090);
 
   MQTT_InitConnection(&mqttClient, MQTT_HOST, MQTT_PORT, DEFAULT_SECURITY);
 
