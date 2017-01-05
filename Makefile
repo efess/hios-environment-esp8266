@@ -11,6 +11,13 @@ XTENSA_TOOLS_ROOT ?= c:/Espressif/xtensa-lx106-elf/bin/
 # base directory of the ESP8266 SDK package, absolute
 SDK_BASE	?= c:/Espressif/ESP8266_SDK_200
 
+# Small file system for web serving
+FSBIN_TOOL	?= python C:/source/GitHub/esp-binfs/espbinfs.py#C:/Espressif/espbinfs/espbinfs.py
+FSBIN_ROOT	?= web/
+FSBIN_OUT	?= espfs.bin
+# Start address of flash
+FSBIN_ADDR	?= 0x102000
+
 #Esptool.py path and port
 ESPTOOL		?= python C:/Espressif/esptool/esptool.py
 ESPPORT		?= COM4
@@ -38,7 +45,7 @@ TARGET		?= esp_mqtt
 TARGET_LIB ?= libmqtt.a
 
 # which modules (subdirectories) of the project to include in compiling
-USER_MODULES		=  shared user driver mqtt modules http upgrade websrv
+USER_MODULES		=  shared user driver mqtt modules http upgrade websrv persistence
 USER_INC				= include
 USER_LIB				=
 
@@ -177,6 +184,10 @@ else
 	ESPTOOL_FLASHDEF=
 	LD_SCRIPT	= -T$(SDK_BASE)/ld/eagle.app.v6.ld
 endif
+
+FSBIN_WRITE = write_flash --flash_freq $(ESP_FREQ) --flash_mode $(ESP_MODE) --flash_size $(ESP_SIZE) \
+								$(FSBIN_ADDR) $(FIRMWARE_BASE)/$(FSBIN_OUT)
+
 OUTPUT_LIB := $(addprefix $(FIRMWARE_BASE)/,$(TARGET_LIB))
 
 
@@ -228,6 +239,12 @@ $(APP_AR): $(OBJ)
 
 flash:
 	$(ESPTOOL) $(ESPTOOL_OPTS) $(ESPTOOL_WRITE)
+
+makefsbin:
+	$(FSBIN_TOOL) -o $(FIRMWARE_BASE)/$(FSBIN_OUT) -p $(FSBIN_ROOT)
+
+flashespfs:
+	$(ESPTOOL) $(ESPTOOL_OPTS) $(FSBIN_WRITE)
 
 fast: all flash
 

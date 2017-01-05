@@ -10,8 +10,6 @@
 #include "user_interface.h"
 #include "espconn.h"
 
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#define max(a, b) (((a) > (b)) ? (a) : (b))
 
 typedef void (* flash_get_finish_callback)(uint8 result);
 typedef void (* flash_get_data_chunk)(uint8_t *data, uint32_t offset, uint16_t length, int *err);

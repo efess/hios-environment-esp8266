@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "info.h"
 #include "http.h"
+#include "logic.h"
 
 void free_context(flash_get_context *context) 
 {

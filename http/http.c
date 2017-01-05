@@ -8,6 +8,7 @@
 #include "mem.h"
 #include "info.h"
 #include "string.h"
+#include "logic.h"
 
 void ICACHE_FLASH_ATTR http_print_error(const uint8_t *name, int8_t errNum) 
 {
@@ -51,6 +52,16 @@ void ICACHE_FLASH_ATTR http_print_error(const uint8_t *name, int8_t errNum)
     }
 }
 
+// returns bytes count of string including delimiter
+uint8_t ICACHE_FLASH_ATTR http_get_next_space_delimited(uint8_t* buf, uint8_t *str)
+{
+	uint8_t pos = strchr(buf, ' ');
+
+	return pos + 1;
+}
+
+// puts data into the buffer, and increments the buffer pointer
+// returns number of bytes written
 uint8_t ICACHE_FLASH_ATTR put(uint8_t* str, uint8_t** buf) 
 {
     uint16_t len = strlen(str);
@@ -58,6 +69,39 @@ uint8_t ICACHE_FLASH_ATTR put(uint8_t* str, uint8_t** buf)
     strcpy(*buf, str);
     *buf += len;
     return len;
+}
+
+uint8_t ICACHE_FLASH_ATTR write_header(const uint8_t *name,const uint8_t *value, uint8_t **buf)
+{
+	return put(name, buf) + put(": ", buf) + put(value, buf) + put("\r\n", buf);
+}
+
+uint8_t ICACHE_FLASH_ATTR write_status(uint16_t status, uint8_t **buf)
+{
+	switch(status)
+	{
+		case 200: return put(" 200 OK\r\n", buf);
+		case 404: return put(" 404 Not Found\r\n", buf);
+		default: return put(" 501 Not Implemented\r\n", buf);
+	}
+}
+
+uint16_t ICACHE_FLASH_ATTR http_write_response_header(HttpResponse *res, uint8_t *buf, uint16_t maxlen)
+{
+	uint16_t byte_counter = 0;
+	uint8_t temp[16];
+
+	byte_counter += put("HTTP/1.1", &buf);
+	byte_counter += write_status(res->status, &buf);
+	if(res->status == 200 && res->length) {
+		byte_counter += write_header("Content-Type", res->content_type, &buf);
+
+		os_sprintf(temp, "%u", res->length);
+		byte_counter += write_header("Content-Length", temp, &buf);
+	}
+	byte_counter += put("\r\n", &buf);
+
+	return byte_counter;
 }
 
 uint8_t ICACHE_FLASH_ATTR http_get_host_from_url(const uint8_t* url, uint8_t* host)
@@ -139,33 +183,33 @@ int8_t ICACHE_FLASH_ATTR parse_next_header(uint8_t *buf, char* name, char* value
 
 	bufPtr = strchr(bufStart, ':');
 	length = bufPtr - bufStart;
-	if (!bufPtr || length >= HTTP_MAX_HEADER_NAME) 
+	if (!bufPtr) 
     {
 		INFO("HTTP: Invalid header, bad name\r\n");
 		return -1;
 	}
 
-	strncpy(name, bufStart, length);
+	strncpy(name, bufStart, min(length, HTTP_MAX_HEADER_NAME - 1));
 	name[length] = '\0';
 
 	bufPtr += 2; // skip colon and space
 	bufStart = bufPtr;
 	bufPtr = strstr(bufPtr, "\r\n");
 	length = bufPtr - bufStart;
-	if (!bufPtr || length >= HTTP_MAX_HEADER_VALUE) 
+	if (!bufPtr) 
     {
 		INFO("HTTP: Invalid header, bad value\r\n");
 		return -1;
 	}
 
-	strncpy(value, bufStart, length);
+	strncpy(value, bufStart, min(length, HTTP_MAX_HEADER_VALUE - 1));
 	value[length] = '\0';
 	bufPtr += 2; // skip cr ln
 
 	return bufPtr - buf;
 }
 
-int8_t ICACHE_FLASH_ATTR parse_response_start_line(HttpResponse *response, uint8_t *buf, int* err)
+uint8_t ICACHE_FLASH_ATTR parse_response_start_line(HttpResponse *response, uint8_t *buf, int* err)
 {
 	uint8_t *bufPtr = strstr(buf, "\r\n");
 	if (!bufPtr || bufPtr - buf >= 200) 
@@ -178,6 +222,76 @@ int8_t ICACHE_FLASH_ATTR parse_response_start_line(HttpResponse *response, uint8
 
 	bufPtr += 2;
 	return bufPtr - buf;
+}
+
+uint16_t ICACHE_FLASH_ATTR parse_request_start_line(HttpRequest *request, uint8_t *buf, int* err)
+{
+	uint8_t str[100] = { 0 };
+	uint8_t len = 0;
+	uint8_t *bufStart = buf;
+	uint8_t *bufPtr = buf;
+	uint8_t *tokenPtr = 0;
+
+	tokenPtr = strchr(bufPtr, ' ');
+	if (!tokenPtr)
+	{
+		INFO("HTTP: Invalid header start line\r\n");
+		err = -1;
+		return 0;
+	}
+	strncpy(str, bufPtr, tokenPtr - bufPtr);
+	str[tokenPtr - bufPtr] = '\0';
+	bufPtr = tokenPtr + 1;// skip token
+
+	if (strcmp(str, "GET") == 0)
+	{
+		request->verb = HTTP_GET;
+	}
+	else if (strcmp(str, "HEAD") == 0)
+	{
+		request->verb = HTTP_HEAD;
+	}
+	else if (strcmp(str, "POST") == 0)
+	{
+		request->verb = HTTP_POST;
+	}
+	else
+	{
+		INFO("HTTP: Unsupported verb '%s'\r\n", str);
+		err = -1;
+		return 0;
+	}
+
+	tokenPtr = strchr(bufPtr, ' ');
+	if (!tokenPtr)
+	{
+		INFO("HTTP: Invalid header start line\r\n");
+		err = -1;
+		return 0;
+	}
+	len = tokenPtr - bufPtr;
+	if (len >= 100)
+	{
+		INFO("HTTP: URL is at or above 100 characters\r\n");
+		err = -1;
+		return 0;
+	}
+
+	request->url = os_zalloc(len + 1);
+	strncpy(request->url, bufPtr, len);
+	request->url[len] = 0;
+	bufPtr = tokenPtr + 1; // skip space
+
+	tokenPtr = strstr(bufPtr, "\r\n");
+	if (!tokenPtr)
+	{
+		INFO("HTTP: Invalid header start line, end not found\r\n");
+		err = -1;
+		return 0;
+	}
+
+	bufPtr = tokenPtr + 2;
+	return bufPtr - bufStart;
 }
 
 uint16_t ICACHE_FLASH_ATTR http_parse_response_header(HttpResponse *response, uint8_t *buf, uint16_t length, int* err)
@@ -210,6 +324,42 @@ uint16_t ICACHE_FLASH_ATTR http_parse_response_header(HttpResponse *response, ui
 		if (strcmp(name, HTTP_HEADER_CONTENT_LENGTH) == 0) 
         {
 			response->length = atoi(value);
+		}
+	}
+
+	return bufPtr - buf;
+}
+
+uint16_t ICACHE_FLASH_ATTR http_parse_request_header(HttpRequest *request, uint8_t *buf, uint16_t length, int* err)
+{
+	uint8_t name[HTTP_MAX_HEADER_NAME];
+	uint8_t value[HTTP_MAX_HEADER_VALUE];
+	uint8_t *bufPtr = buf;
+	int16_t byte_counter = 0;
+
+	byte_counter = parse_request_start_line(request, buf, err);
+	if (*err != HTTP_OK)
+	{
+
+	}
+	bufPtr += byte_counter;
+
+	while (1)
+	{
+		byte_counter = parse_next_header(bufPtr, name, value);
+		bufPtr += byte_counter;
+		if (byte_counter < 0)
+		{
+			return 1;
+		}
+		if (byte_counter <= 2)
+		{
+			break;
+		}
+
+		if (strcmp(name, HTTP_HEADER_CONTENT_LENGTH) == 0)
+		{
+			request->length = atoi(value);
 		}
 	}
 
