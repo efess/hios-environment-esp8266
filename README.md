@@ -17,10 +17,10 @@ Final product is a device for recording and reporting on room environment inform
 * (maybe) websocket support for realtime feeds
   
 Filesystem blob is created using this tool:
-(https://github.com/efess/esp-binfs)[https://github.com/efess/esp-binfs]
+https://github.com/efess/esp-binfs
 
 Using Tuan PM's wonderful MQTT lib:
-(https://github.com/tuanpmt/esp_mqtt)[https://github.com/tuanpmt/esp_mqtt]
+https://github.com/tuanpmt/esp_mqtt
 
 OTA bootloader by Tuan PM as well:
-(https://github.com/tuanpmt/esp-bootloader)[https://github.com/tuanpmt/esp-bootloader]
+https://github.com/tuanpmt/esp-bootloader
