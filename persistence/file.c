@@ -4,7 +4,7 @@
 #include "info.h"
 #include "spi_flash.h"
 
-uint8_t file_find(EspFileDescriptor *descriptor, uint8_t *name)
+uint8_t ICACHE_FLASH_ATTR file_find(EspFileDescriptor *descriptor, uint8_t *name)
 {
     EspFileDescriptor desc_stg;
     
@@ -27,7 +27,7 @@ uint8_t file_find(EspFileDescriptor *descriptor, uint8_t *name)
     return 0;
 }
 
-void file_read(EspFileDescriptor *descriptor, uint8_t *buffer, uint32_t offset, uint32_t length)
+void ICACHE_FLASH_ATTR file_read(EspFileDescriptor *descriptor, uint8_t *buffer, uint32_t offset, uint32_t length)
 {
     uint32_t addr_start = FILE_FLASH_START + descriptor->offset + offset;
     

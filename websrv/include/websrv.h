@@ -2,7 +2,7 @@
 #include "resource_handler.h"
 #include "http.h"
 
-#define WEB_SRV_BUF 1024
+#define WEB_SRV_BUF 2048
 
 typedef enum {
     CLIENT_IDLE,

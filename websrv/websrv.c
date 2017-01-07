@@ -152,7 +152,6 @@ void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn 
                 return;
             }
             client->resource = webserver_get_resource_name(request->url);
-            INFO("WebSrv: header received for resource %s\r\n", client->resource);
             client->current_client_request = request;
             client->current_byte_offset = 0;
             bufPtr += byte_count;
@@ -174,7 +173,6 @@ void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn 
         {
             // receiving message body
             client->current_byte_offset += len;
-            INFO("WebSrv: Received all %u bytes\r\n", client->current_byte_offset);
             break;
         }
     }
@@ -184,30 +182,24 @@ void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn 
         client->state = CLIENT_RECEIVING;
         client->current_byte_offset = 0;
         uint32_t resource_length = client->current_handler.request_size_fn(client->resource);
-        INFO("WebSrv: Received all bytes\r\n");
-        // Got the dataz. Send response.
+
         HttpResponse response;
         response.verb  = client->current_client_request->verb;
         
         if(resource_length == 0) 
         {
-            INFO("WebSrv: Resource not found\r\n");
             response.status = 404;
         }
-        else 
+        else
         {
-            INFO("WebSrv: Resource found at %u bytes\r\n", resource_length);
             response.status = 200;
             response.length = resource_length;
             websrv_file_request_data_content_type(client->resource, response.content_type);
             client->current_size = resource_length;
         }
         
-        INFO("WebSrv: Writing response http_parse_request_header\r\n");
         uint16_t bytes_written = http_write_response_header(&response, client->buf, WEB_SRV_BUF);
-        INFO("WebSrv: Sending response\r\n");
-        espconn_send(con, client->buf, bytes_written);
-        INFO("WebSrv: response sent\r\n");
+        espconn_send(con, client->buf, bytes_written);\
     }
 }
 
@@ -224,6 +216,7 @@ void ICACHE_FLASH_ATTR webserver_handle_sent(Client *client, struct espconn *con
         }
         if(client->resource)
         {
+            INFO("WebSrv: Served %s to %s\r\n", client->resource, client->identity);
             os_free(client->resource);
         }
     } 
@@ -250,10 +243,10 @@ void ICACHE_FLASH_ATTR webserver_receive_cb(void *arg, char *pdata, unsigned sho
             con->proto.tcp->remote_ip,
             con->proto.tcp->remote_port);
 
-    INFO("WebSrv: Receive CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
+    //INFO("WebSrv: Receive CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
     Client* client = webserver_client_find(identity);
     if(!client) {
-        INFO("WebSrv: Receive called but client not foundfor %s\r\n", identity);
+        INFO("WebSrv: Receive called but client not found for %s\r\n", identity);
         return;
     }
     webserver_handle_received(client, con, pdata, len);
@@ -267,12 +260,9 @@ void ICACHE_FLASH_ATTR webserver_connect_cb(void *arg)
             con->proto.tcp->remote_ip,
             con->proto.tcp->remote_port);
 
-    INFO("WebSrv: Connect CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
-
+    //INFO("WebSrv: Connect CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
     Client* client = webserver_create_client(identity);
-    INFO("WebSrv: Created client %s\r\n", client->identity);
     webserver_client_add(client);
-    INFO("WebSrv: Added client %s\r\n", client->identity);
 }
 
 
@@ -284,7 +274,7 @@ void ICACHE_FLASH_ATTR webserver_disconnect_cb(void *arg)
             con->proto.tcp->remote_ip,
             con->proto.tcp->remote_port);
 
-    INFO("WebSrv: Disconnect CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
+    //INFO("WebSrv: Disconnect CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
     Client* client = webserver_client_find(identity);
     if(!client) {
         INFO("WebSrv: Disconnect called but client not found for %s\r\n", identity);
@@ -293,6 +283,8 @@ void ICACHE_FLASH_ATTR webserver_disconnect_cb(void *arg)
 
     webserver_client_remove(client);
     webserver_destroy_client(client);
+
+    INFO("WebSr: Client disconnect. Num Connected: %u. Free heap: %u\r\n",  webserver_client_count(), system_get_free_heap_size());
 }
 
 void ICACHE_FLASH_ATTR webserver_sent_cb(void *arg)
@@ -303,7 +295,7 @@ void ICACHE_FLASH_ATTR webserver_sent_cb(void *arg)
             con->proto.tcp->remote_ip,
             con->proto.tcp->remote_port);
 
-    INFO("WebSrv: Sent CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
+    //INFO("WebSrv: Sent CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
     Client* client = webserver_client_find(identity);
     if(!client) {
         INFO("WebSrv: Sent called but client not foundfor %s\r\n", identity);
@@ -321,7 +313,7 @@ void ICACHE_FLASH_ATTR webserver_recon_cb(void *arg, sint8 err)
             con->proto.tcp->remote_ip,
             con->proto.tcp->remote_port);
 
-    INFO("WebSrv: Recon CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
+    //INFO("WebSrv: Recon CB. %s (%u connected clients)\r\n", identity, webserver_client_count());
     Client* client = webserver_client_find(identity);
     if(!client) {
         INFO("WebSrv: Recon called but client not foundfor %s\r\n", identity);

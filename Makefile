@@ -16,7 +16,7 @@ FSBIN_TOOL	?= python C:/source/GitHub/esp-binfs/espbinfs.py#C:/Espressif/espbinf
 FSBIN_ROOT	?= web/
 FSBIN_OUT	?= espfs.bin
 # Start address of flash
-FSBIN_ADDR	?= 0x102000
+FSBIN_ADDR	?= 0x103000
 
 #Esptool.py path and port
 ESPTOOL		?= python C:/Espressif/esptool/esptool.py
@@ -110,6 +110,7 @@ TARGET_OUT	:= $(addprefix $(BUILD_BASE)/,$(TARGET).out)
 CFLAGS		= -g			\
 						-Wpointer-arith		\
 						-Wundef			\
+						-Werror \
 						-Wl,-EL			\
 						-Wno-implicit-function-declaration \
 						-fno-inline-functions	\
@@ -243,7 +244,7 @@ flash:
 makefsbin:
 	$(FSBIN_TOOL) -o $(FIRMWARE_BASE)/$(FSBIN_OUT) -p $(FSBIN_ROOT)
 
-flashespfs:
+flashfsbin:
 	$(ESPTOOL) $(ESPTOOL_OPTS) $(FSBIN_WRITE)
 
 fast: all flash

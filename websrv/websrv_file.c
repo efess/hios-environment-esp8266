@@ -44,7 +44,7 @@ void websrv_file_request_data_content_type(uint8_t *resource, uint8_t *content_t
     // find content type...
     uint8_t *ext = strrchr(resource, '.');
 
-    if(strcmp(ext, ".htm") == 0 || strcmp(ext, ".html"))
+    if(strcmp(ext, ".htm") == 0 || strcmp(ext, ".html") == 0 )
     {
         strcpy(content_type, "text/html");
         return;
@@ -74,4 +74,5 @@ void websrv_file_request_data_content_type(uint8_t *resource, uint8_t *content_t
         strcpy(content_type, "image/png");
         return;
     }
+    strcpy(content_type, "text/plain");
 }

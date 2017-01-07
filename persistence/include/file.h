@@ -1,6 +1,6 @@
 #include "user_interface.h"
 
-#define FILE_FLASH_START 0x102000
+#define FILE_FLASH_START 0x103000
 #define FILE_FLASH_INDEX_START  FILE_FLASH_START + 0x4
 #define FILE_PATH_LENGTH 56
 

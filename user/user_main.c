@@ -89,7 +89,7 @@ static void ICACHE_FLASH_ATTR mqttDataCb(uint32_t *args, const char* topic, uint
   INFO("Receive topic: %s, data: %s \r\n", topicBuf, dataBuf);
 
   if(strcmp(topicBuf, TOPIC_OTA_UPGRADE) == 0) 
-  {
+  { 
     INFO("Running upgrade\r\n");
     upgrade_available(dataBuf);
   }
@@ -134,6 +134,9 @@ static void ICACHE_FLASH_ATTR app_init(void)
   MQTT_OnData(&mqttClient, mqttDataCb);
 
   WIFI_Connect(STA_SSID, STA_PASS, wifiConnectCb);
+
+  INFO("Free heap size: %u\r\n",  system_get_free_heap_size());
+
 }
 
 void user_init(void)
