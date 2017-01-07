@@ -5,7 +5,7 @@
 #include "info.h"
 #include "espconn.h"
 #include "http.h"
-#include "websrv_file.h"
+#include "handler_provider.h"
 
 Client *client = 0;
 
@@ -133,12 +133,26 @@ uint8_t * ICACHE_FLASH_ATTR webserver_get_resource_name(uint8_t *url)
     return resource;
 }
 
+void ICACHE_FLASH_ATTR webserver_cleanup_client_request(Client *client)
+{
+    if(client->current_client_request)
+    {
+        os_free(client->current_client_request->url);
+        os_free(client->current_client_request);
+    }
+    if(client->resource)
+    {
+        os_free(client->resource);
+    }
+}
+
 void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn *con, uint8_t *data, uint16_t len)
 {
     int err = 0;
     uint16_t byte_count = 0;
     uint8_t *bufPtr = data;
-
+    HttpResponse response;
+        
     switch(client->state)
     {
         case CLIENT_IDLE:
@@ -147,30 +161,40 @@ void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn 
             HttpRequest *request = (HttpRequest*)os_zalloc(sizeof(HttpRequest));
             
             byte_count = http_parse_request_header(request, bufPtr, len, &err);
-            if(err != HTTP_OK) 
+            if(err != HTTP_OK)  // Bad header/request
             {
+                response.status = 400;
+                byte_count = http_write_response_header(&response, client->buf, WEB_SRV_BUF);
+                espconn_send(con, client->buf, byte_count);
+                
+                webserver_cleanup_client_request(client);
                 return;
             }
-            client->resource = webserver_get_resource_name(request->url);
+
             client->current_client_request = request;
             client->current_byte_offset = 0;
-            bufPtr += byte_count;
+            client->resource = webserver_get_resource_name(request->url);
 
+            handler_provider_assign(client->resource, &(client->handler));
+            //webserver_set_resource_handler(&(client->handler), client->resource);
+            
+            bufPtr += byte_count;
+            if(client->handler.setup_context){
+                client->handler.setup_context(client->handler_context, client->resource);
+            }
+            
             if(request->length) {
                 client->state = CLIENT_SENDING;
                 client->current_size = request->length;
             } else {
                 client->current_size = 0;
             }
-
-            client->current_handler.request_chunk_fn = websrv_file_request_data_chunk;
-            client->current_handler.request_size_fn = websrv_file_request_data_size;
             
-            // parse URL, find handler, process request
             break;
         }
         case CLIENT_SENDING:
         {
+            INFO("WebSrv: client is still sending to us?\r\n");
             // receiving message body
             client->current_byte_offset += len;
             break;
@@ -181,25 +205,22 @@ void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn 
     {
         client->state = CLIENT_RECEIVING;
         client->current_byte_offset = 0;
-        uint32_t resource_length = client->current_handler.request_size_fn(client->resource);
+        uint32_t resource_length = client->handler.response_body_size(client->handler_context, client->resource);
+        client->current_size = resource_length;
 
-        HttpResponse response;
         response.verb  = client->current_client_request->verb;
-        
-        if(resource_length == 0) 
-        {
-            response.status = 404;
-        }
-        else
-        {
-            response.status = 200;
-            response.length = resource_length;
-            websrv_file_request_data_content_type(client->resource, response.content_type);
-            client->current_size = resource_length;
+
+        if(client->handler.response_header) {
+            client->handler.response_header(
+                client->handler_context,
+                client->resource,
+                &response);
         }
         
-        uint16_t bytes_written = http_write_response_header(&response, client->buf, WEB_SRV_BUF);
-        espconn_send(con, client->buf, bytes_written);\
+        INFO("WebSrv: Serving %s (%u bytes) to %s\r\n", client->resource, resource_length, client->identity);
+        
+        byte_count = http_write_response_header(&response, client->buf, WEB_SRV_BUF);
+        espconn_send(con, client->buf, byte_count);
     }
 }
 
@@ -208,27 +229,17 @@ void ICACHE_FLASH_ATTR webserver_handle_sent(Client *client, struct espconn *con
     if(client->current_size == client->current_byte_offset)
     {
         client->state = CLIENT_IDLE;
-        // cleanup.
-        if(client->current_client_request)
-        {
-            os_free(client->current_client_request->url);
-            os_free(client->current_client_request);
-        }
-        if(client->resource)
-        {
-            INFO("WebSrv: Served %s to %s\r\n", client->resource, client->identity);
-            os_free(client->resource);
-        }
+        
+        webserver_cleanup_client_request(client);
     } 
     else 
     {
         uint16_t send_length = 0;
-        client->current_handler.request_chunk_fn(
+        send_length =client->handler.response_body_chunk(
+            client->handler_context,
             client->resource,
             client->buf,
-            WEB_SRV_BUF,
-            client->current_byte_offset,
-            &send_length
+            WEB_SRV_BUF
         );
         client->current_byte_offset += send_length;
         espconn_send(con, client->buf, send_length);

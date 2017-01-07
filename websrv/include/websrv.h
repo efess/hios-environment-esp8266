@@ -2,6 +2,7 @@
 #include "resource_handler.h"
 #include "http.h"
 
+#define WEB_CONTEXT_ALLOWANCE 128
 #define WEB_SRV_BUF 2048
 
 typedef enum {
@@ -12,19 +13,18 @@ typedef enum {
     CLIENT_SENDING
 } ClientState;
 
-typedef struct {
-    request_data_chunk request_chunk_fn;
-    request_data_size request_size_fn;
-} ResourceHandler;
 
 typedef struct {
     uint8_t buf[WEB_SRV_BUF];
     uint8_t *identity;
     ClientState state;
 
-    ResourceHandler current_handler;
+    ResourceHandler handler;
+    uint8_t handler_context[WEB_CONTEXT_ALLOWANCE];
+    
     HttpRequest *current_client_request;
     
+    // both receive and send counters
     uint32_t current_size;
     uint32_t current_byte_offset;
     

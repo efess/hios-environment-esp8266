@@ -52,17 +52,9 @@ void ICACHE_FLASH_ATTR http_print_error(const uint8_t *name, int8_t errNum)
     }
 }
 
-// returns bytes count of string including delimiter
-uint8_t ICACHE_FLASH_ATTR http_get_next_space_delimited(uint8_t* buf, uint8_t *str)
-{
-	uint8_t pos = strchr(buf, ' ');
-
-	return pos + 1;
-}
-
 // puts data into the buffer, and increments the buffer pointer
 // returns number of bytes written
-uint8_t ICACHE_FLASH_ATTR put(uint8_t* str, uint8_t** buf) 
+uint8_t ICACHE_FLASH_ATTR put(const uint8_t* str, uint8_t** buf) 
 {
     uint16_t len = strlen(str);
 
@@ -81,6 +73,7 @@ uint8_t ICACHE_FLASH_ATTR write_status(uint16_t status, uint8_t **buf)
 	switch(status)
 	{
 		case 200: return put(" 200 OK\r\n", buf);
+		case 400: return put(" 400 Bad request\r\n", buf);
 		case 404: return put(" 404 Not Found\r\n", buf);
 		default: return put(" 501 Not Implemented\r\n", buf);
 	}
@@ -236,7 +229,7 @@ uint16_t ICACHE_FLASH_ATTR parse_request_start_line(HttpRequest *request, uint8_
 	if (!tokenPtr)
 	{
 		INFO("HTTP: Invalid header start line\r\n");
-		err = -1;
+		*err = -1;
 		return 0;
 	}
 	strncpy(str, bufPtr, tokenPtr - bufPtr);
@@ -258,7 +251,7 @@ uint16_t ICACHE_FLASH_ATTR parse_request_start_line(HttpRequest *request, uint8_
 	else
 	{
 		INFO("HTTP: Unsupported verb '%s'\r\n", str);
-		err = -1;
+		*err = -1;
 		return 0;
 	}
 
@@ -266,18 +259,18 @@ uint16_t ICACHE_FLASH_ATTR parse_request_start_line(HttpRequest *request, uint8_
 	if (!tokenPtr)
 	{
 		INFO("HTTP: Invalid header start line\r\n");
-		err = -1;
+		*err = -1;
 		return 0;
 	}
 	len = tokenPtr - bufPtr;
 	if (len >= 100)
 	{
 		INFO("HTTP: URL is at or above 100 characters\r\n");
-		err = -1;
+		*err = -1;
 		return 0;
 	}
 
-	request->url = os_zalloc(len + 1);
+	request->url = (uint8_t*)os_zalloc(len + 1);
 	strncpy(request->url, bufPtr, len);
 	request->url[len] = 0;
 	bufPtr = tokenPtr + 1; // skip space
@@ -286,7 +279,7 @@ uint16_t ICACHE_FLASH_ATTR parse_request_start_line(HttpRequest *request, uint8_
 	if (!tokenPtr)
 	{
 		INFO("HTTP: Invalid header start line, end not found\r\n");
-		err = -1;
+		*err = -1;
 		return 0;
 	}
 

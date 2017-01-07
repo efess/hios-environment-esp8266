@@ -1,5 +1,21 @@
+#ifndef _RESOURCE_HANDLER_H_
+#define _RESOURCE_HANDLER_H_
 
-typedef void (* push_data_chunk)(uint8_t *resource, uint8_t *data, uint32_t offset, uint16_t length);
-typedef void (* request_data_chunk)(uint8_t *resource, uint8_t *data, uint16_t buffer_size, uint32_t offset, uint16_t *length);
-typedef uint32_t (* request_data_size)(uint8_t *resource);
-typedef void (* request_data_content_type)(uint8_t *resource, uint8_t *content_type);
+#include "http.h"
+
+
+typedef void (* handler_setup_context)(void *context, uint8_t *resource);
+typedef void (* handler_request_body)(void *context, uint8_t *resource, uint8_t *data, uint16_t length);
+typedef uint16_t (* handler_response_body_chunk)(void *context, uint8_t *resource, uint8_t *data, uint16_t buffer_size);
+typedef uint32_t (* handler_response_body_size)(void *context, uint8_t *resource);
+typedef void (* handler_response_header)(void *context, uint8_t *resource, HttpResponse *response);
+
+typedef struct {
+    handler_setup_context       setup_context;
+    handler_request_body        request_body;
+    handler_response_body_chunk response_body_chunk;
+    handler_response_body_size  response_body_size ;
+    handler_response_header     response_header;
+} ResourceHandler;
+
+#endif
