@@ -4,8 +4,9 @@
 #include "string.h"
 #include "file.h"
 #include "logic.h"
+#include "mem.h"
 
-void websrv_get_content_type(uint8_t *ext, uint8_t *content_type)
+void ICACHE_FLASH_ATTR websrv_get_content_type(uint8_t *ext, uint8_t *content_type)
 {    
     if(strcmp(ext, ".htm") == 0 || strcmp(ext, ".html") == 0 )
     {
@@ -42,10 +43,10 @@ void websrv_get_content_type(uint8_t *ext, uint8_t *content_type)
 
 // typedef void (* push_data_chunk)(uint8_t *data, uint16_t buffer_size, uint32_t offset, uint16_t length, bool isFinished);
 // typedef void (* request_data_chunk)(uint8_t *data, uint16_t buffer_size, uint32_t offset, uint16_t *length, bool isFinished);
-void websrv_file_setup_context(void *context, uint8_t *resource)
+void ICACHE_FLASH_ATTR websrv_file_setup_context(void **context, uint8_t *resource, HttpRequest *request)
 {
-    WebSrvContext *websrv_context = (WebSrvContext*)context;
-    os_memset(websrv_context, 0, sizeof(websrv_context));
+    *context = (void*)os_zalloc(sizeof(WebSrvContext));
+    WebSrvContext *websrv_context = (WebSrvContext*)*context;
 
     EspFileDescriptor desc;
     if(file_find(&desc, resource)) 
@@ -62,13 +63,13 @@ void websrv_file_setup_context(void *context, uint8_t *resource)
     }
 }
 
-uint32_t websrv_file_response_body_size(void *context, uint8_t *resource)
+uint32_t ICACHE_FLASH_ATTR websrv_file_response_body_size(void *context, uint8_t *resource)
 {
     WebSrvContext *websrv_context = (WebSrvContext*)context;
     return websrv_context->file_length;
 }
 
-uint16_t websrv_file_response_body_chunk(void *context, uint8_t *resource, uint8_t *data, uint16_t buffer_size)
+uint16_t ICACHE_FLASH_ATTR websrv_file_response_body_chunk(void *context, uint8_t *resource, uint8_t *data, uint16_t buffer_size)
 {
     WebSrvContext *websrv_context = (WebSrvContext*)context;
 
@@ -85,7 +86,7 @@ uint16_t websrv_file_response_body_chunk(void *context, uint8_t *resource, uint8
     return to_get;
 }
 
-void websrv_file_response_header(void *context, uint8_t *resource, HttpResponse *response)
+void ICACHE_FLASH_ATTR websrv_file_response_header(void *context, uint8_t *resource, HttpResponse *response)
 {
     WebSrvContext *websrv_context = (WebSrvContext*)context;
     
@@ -102,4 +103,9 @@ void websrv_file_response_header(void *context, uint8_t *resource, HttpResponse 
 
         websrv_get_content_type(ext, response->content_type);
     }
+}
+
+void ICACHE_FLASH_ATTR websrv_file_free_context(void *context)
+{
+    os_free(context);
 }

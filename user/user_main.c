@@ -38,11 +38,12 @@
 #include "websrv.h"
 #include "info.h"
 #include "upgrade.h"
-
+#include "wifi_scan.h"
 #define TOPIC_OTA_UPGRADE  "/flash/available"
 
 MQTT_Client mqttClient;
 WebSrv webServer;
+
 
 static void ICACHE_FLASH_ATTR wifiConnectCb(uint8_t status)
 {
@@ -134,6 +135,9 @@ static void ICACHE_FLASH_ATTR app_init(void)
   MQTT_OnData(&mqttClient, mqttDataCb);
 
   WIFI_Connect(STA_SSID, STA_PASS, wifiConnectCb);
+
+   // wifi scan has to after system init done.
+   system_init_done_cb(wifi_start_scan);
 
   INFO("Free heap size: %u\r\n",  system_get_free_heap_size());
 

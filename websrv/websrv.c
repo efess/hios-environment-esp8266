@@ -137,6 +137,10 @@ void ICACHE_FLASH_ATTR webserver_cleanup_client_request(Client *client)
 {
     if(client->current_client_request)
     {
+        if(client->handler.free_context)
+        {
+            client->handler.free_context(client->handler_context);
+        }
         os_free(client->current_client_request->url);
         os_free(client->current_client_request);
     }
@@ -180,13 +184,21 @@ void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn 
             
             bufPtr += byte_count;
             if(client->handler.setup_context){
-                client->handler.setup_context(client->handler_context, client->resource);
+                client->handler.setup_context((void*)&client->handler_context, client->resource, request);
             }
-            
-            if(request->length) {
-                client->state = CLIENT_SENDING;
+
+            if(request->length) 
+            {
                 client->current_size = request->length;
-            } else {
+                client->current_byte_offset = len - byte_count;    
+                if(client->current_byte_offset > 0)
+                {
+                    os_memcpy(client->buf, bufPtr, client->current_byte_offset);
+                }
+                client->state = CLIENT_SENDING;
+            } 
+            else 
+            {
                 client->current_size = 0;
             }
             
@@ -194,15 +206,28 @@ void ICACHE_FLASH_ATTR webserver_handle_received(Client *client, struct espconn 
         }
         case CLIENT_SENDING:
         {
-            INFO("WebSrv: client is still sending to us?\r\n");
-            // receiving message body
-            client->current_byte_offset += len;
+            
+            if(len + client->current_byte_offset > WEB_SRV_BUF) {
+                INFO("WebSrv: Buffer not large enough for request\r\n");
+            } else {
+                os_memcpy((client->buf + client->current_byte_offset), bufPtr, len);;
+                client->current_byte_offset += len;
+            }
             break;
         }
     }
 
+    INFO("WebSrv: request length: %u, offset: %u\r\n", 
+        client->current_size,
+        client->current_byte_offset);
+
     if(client->current_size == client->current_byte_offset)
     {
+        if(client->current_size > 0) 
+        {
+            client->handler.request_body(client->handler_context, client->resource, client->buf, client->current_size);
+        }
+
         client->state = CLIENT_RECEIVING;
         client->current_byte_offset = 0;
         uint32_t resource_length = client->handler.response_body_size(client->handler_context, client->resource);

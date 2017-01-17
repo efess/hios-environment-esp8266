@@ -2,7 +2,6 @@
 #include "resource_handler.h"
 #include "http.h"
 
-#define WEB_CONTEXT_ALLOWANCE 128
 #define WEB_SRV_BUF 2048
 
 typedef enum {
@@ -20,8 +19,8 @@ typedef struct {
     ClientState state;
 
     ResourceHandler handler;
-    uint8_t handler_context[WEB_CONTEXT_ALLOWANCE];
-    
+    uint8_t *handler_context;
+        
     HttpRequest *current_client_request;
     
     // both receive and send counters

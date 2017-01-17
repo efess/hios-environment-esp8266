@@ -91,7 +91,7 @@ void ICACHE_FLASH_ATTR WIFI_Connect(uint8_t* ssid, uint8_t* pass, WifiCallback c
 void ICACHE_FLASH_ATTR WIFI_APMode()
 {
   INFO("WIFI_INIT Access Point\r\n");
-  wifi_set_opmode(SOFTAP_MODE);
+  wifi_set_opmode(STATIONAP_MODE);
   struct softap_config ap_config;
   os_memset(ap_config, 0, sizeof(struct softap_config));
   os_sprintf(ap_config.ssid, "esp8266_%u", system_get_chip_id());
