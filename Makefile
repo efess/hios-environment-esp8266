@@ -12,7 +12,7 @@ XTENSA_TOOLS_ROOT ?= c:/Espressif/xtensa-lx106-elf/bin/
 SDK_BASE	?= c:/Espressif/ESP8266_SDK_200
 
 # Small file system for web serving
-FSBIN_TOOL	?= python C:/source/GitHub/esp-binfs/espbinfs.py#C:/Espressif/espbinfs/espbinfs.py
+FSBIN_TOOL	?= c:/python35/python C:/source/GitHub/esp-binfs/espbinfs.py#C:/Espressif/espbinfs/espbinfs.py
 FSBIN_ROOT	?= web/
 FSBIN_OUT	?= espfs.bin
 # Start address of flash

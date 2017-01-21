@@ -2,7 +2,7 @@
 #include "resource_handler.h"
 #include "http.h"
 
-#define WEB_SRV_BUF 2048
+#define WEB_SRV_BUF 1024
 
 typedef enum {
     CLIENT_IDLE,
@@ -33,9 +33,6 @@ typedef struct {
 
 typedef struct {
     struct espconn *con;
-    uint8_t buf[WEB_SRV_BUF];
-    
 } WebSrv;
 
 void websrv_listen(WebSrv *srv, uint16_t port);
-void websrv_receive(void *arg, char *pdata, unsigned short len);

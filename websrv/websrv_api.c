@@ -26,23 +26,17 @@ void ICACHE_FLASH_ATTR websrv_api_init_putchar_buffer(uint8_t *buffer)
 
 uint16_t ICACHE_FLASH_ATTR websrv_api_print_wifi_scan(uint8_t *buffer, uint8_t *params)
 {
-    INFO("WebSrvAPI: printing\r\n");
+    
     WifiScanParams *wifi_params = (WifiScanParams*)params;
 
     websrv_api_init_putchar_buffer(buffer);
     
     struct jsontree_string status;
     uint8_t status_str[14] = {0};
-    uint8_t c = 0;
+    uint8_t c = 0;  
 
     status.type = JSON_TYPE_STRING;
     status.value = status_str;
-
-    struct jsontree_array ap_list = {
-        JSON_TYPE_ARRAY,
-        wifi_scan_state.ap_count,
-        NULL
-    };
 
     if(wifi_params->request == API_WIFI_SCAN_BAD_REQUEST)
     {
@@ -72,6 +66,18 @@ uint16_t ICACHE_FLASH_ATTR websrv_api_print_wifi_scan(uint8_t *buffer, uint8_t *
     {
         os_strcpy(status_str, "SCAN ERROR");
     }
+    
+    INFO("WebSrvAPI: creating json, apcount: %u\r\n", wifi_scan_state.ap_count);
+    
+    char *ssid = "ssid",
+        *strength = "strength",
+        *auth = "auth";
+
+    struct jsontree_array ap_list = {
+        JSON_TYPE_ARRAY,
+        wifi_scan_state.ap_count,
+        NULL
+    };
 
     if(wifi_scan_state.ap_count > 0)
     {
@@ -79,20 +85,23 @@ uint16_t ICACHE_FLASH_ATTR websrv_api_print_wifi_scan(uint8_t *buffer, uint8_t *
         struct jsontree_object *ap_obj = (struct jsontree_object *)json_dynamic_create_object(wifi_scan_state.ap_count);
 
         for (c = 0; c < wifi_scan_state.ap_count; c++) {
+
             ApInfo *ap_info = wifi_scan_state.ap_list[c];
             struct jsontree_object *obj = &ap_obj[c];
 
-            obj->count = 2;
-            obj->pairs = (struct jsontree_pair *)json_dynamic_create_pairs(2);
-            
             obj->type = JSON_TYPE_OBJECT;
-            obj->count = 2;
-            obj->pairs[0].name = "strength";
+            obj->count = 3;
+            obj->pairs = (struct jsontree_pair *)json_dynamic_create_pairs(3);
+            
+            obj->pairs[0].name = strength;
             obj->pairs[0].value = (struct jsontree_value*)json_dynamic_create_int(ap_info->signal);
 
-            obj->pairs[1].name = "ssid";
+            obj->pairs[1].name = ssid;
             obj->pairs[1].value = (struct jsontree_value*)json_dynamic_create_string(ap_info->ssid);
 
+            obj->pairs[2].name = auth;
+            obj->pairs[2].value = (struct jsontree_value*)json_dynamic_create_int(ap_info->auth);
+            
             ap_list.values[c] = (struct jsontree_value*)obj;
         }
     }
@@ -111,14 +120,12 @@ uint16_t ICACHE_FLASH_ATTR websrv_api_print_wifi_scan(uint8_t *buffer, uint8_t *
     
     jsontree_setup(&context, (struct jsontree_value *) &root, _json_putchar);
     
-    uint8_t counter = 0;
-    
     while (jsontree_print_next(&context)) { }
 
     if(wifi_scan_state.ap_count > 0) 
     {
-        os_free(ap_list.values);
         json_dynamic_free_all();
+        os_free(ap_list.values);
     }
 
     return json_putchar_buffer.pos;

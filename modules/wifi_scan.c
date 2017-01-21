@@ -44,7 +44,7 @@ void ICACHE_FLASH_ATTR wifi_scan_finish(void *args, STATUS status)
         os_strncpy(info->ssid, bss_link->ssid, os_strlen(bss_link->ssid));
 
         info->signal = bss_link->rssi;
-        
+        info->auth = bss_link->authmode;
         wifi_scan_state.ap_list[c] = info;
 
         bss_link = bss_link->next.stqe_next;

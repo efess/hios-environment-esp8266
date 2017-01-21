@@ -11,6 +11,7 @@ typedef enum  {
 typedef struct {
     uint8_t *ssid;
     sint8_t signal;
+    uint8_t auth;
 } ApInfo;
 
 typedef struct {
