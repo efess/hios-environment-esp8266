@@ -360,8 +360,6 @@ void ICACHE_FLASH_ATTR webserver_recon_cb(void *arg, sint8 err)
     webserver_destroy_client(client);
 }
 
-
-
 void ICACHE_FLASH_ATTR web_listen(WebSrv *srv, uint16_t port) 
 {
     int8_t result;
@@ -371,8 +369,7 @@ void ICACHE_FLASH_ATTR web_listen(WebSrv *srv, uint16_t port)
     srv->con->state = ESPCONN_NONE;
     srv->con->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
     srv->con->proto.tcp->local_port = port;
-    //srv->con->reverse = srv;
-    srv->con->reverse = "testing.";
+    srv->con->reverse = srv;
 
     espconn_regist_recvcb(srv->con, webserver_receive_cb);
     espconn_regist_connectcb(srv->con, webserver_connect_cb);
@@ -393,15 +390,25 @@ void ICACHE_FLASH_ATTR web_listen(WebSrv *srv, uint16_t port)
         return;
     }
 
+    espconn_tcp_set_max_con(WEB_SRV_MAX_CON);
+    espconn_tcp_set_max_con_allow(srv->con, WEB_SRV_MAX_CON);
+ 
+    INFO("WebSrv: Max TCP connections: %d\r\n", espconn_tcp_get_max_con());
+    INFO("WebSrv: Max TCP allowed for server: %d\r\n", espconn_tcp_get_max_con_allow(srv->con));
     INFO("WebSrv: Web server listening on port %d\r\n", port);
 }
 
-// void websrv_receive(void *arg, char *pdata, unsigned short len)
-// {
-//     INFO("WebSrv: Received data length %d", len);
-//     struct espconn* con = (struct espconn*)arg;
-//     uint8_t its[] = "hello world";
-
-//     espconn_send(con, its, 12);
-//     INFO("WebSrv: Sending...");
-// }
+void ICACHE_FLASH_ATTR websrv_destroy(WebSrv *srv) 
+{
+    //TODO: check for open connections,
+    // close them on a task
+    
+    // if(srv->con) 
+    // {
+    //     if(srv->con->proto.tcp)
+    //     {
+    //         os_free(srv->con->proto.tcp);
+    //     }
+    //     os_free(srv->con);
+    // }
+}

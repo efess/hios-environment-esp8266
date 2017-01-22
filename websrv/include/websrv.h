@@ -2,6 +2,7 @@
 #include "resource_handler.h"
 #include "http.h"
 
+#define WEB_SRV_MAX_CON 10
 #define WEB_SRV_BUF 1024
 
 typedef enum {
@@ -36,3 +37,4 @@ typedef struct {
 } WebSrv;
 
 void websrv_listen(WebSrv *srv, uint16_t port);
+void websrv_destroy(WebSrv *srv);
