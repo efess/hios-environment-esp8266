@@ -1,15 +1,18 @@
 var esp = esp || {};
+
 esp.wifiSetup = (function() {
     var url = '/api/apscan';
+
     function isApRow(el) {
       return esp.share.hasClass('ap-row', el);
     }
 
     document.addEventListener("DOMContentLoaded", function(event) { 
+        elements.content = document.getElementById('content');
+        elements.apTable = document.getElementById('wifi-aplist');
         elements.refreshAps = document.getElementById('refresh-aps');
         elements.refreshAps.addEventListener('click', sendRefresh);
 
-        elements.apTable = document.getElementById('wifi-aplist');
         elements.ssid = document.getElementById('ap-ssid');
         elements.password = document.getElementById('ap-password')
         elements.loading = document.getElementById('loading');
@@ -21,6 +24,10 @@ esp.wifiSetup = (function() {
             rowClick(row);
           }
         });
+
+        elements.loading.style.display = 'none';
+        elements.content.style.display = '';
+        
     });
 
     var auth = {
@@ -125,7 +132,7 @@ esp.wifiSetup = (function() {
       //return data.apList[idx];
       return {ssid:"TODO"};
     }
-    
+
     return {
         
     };

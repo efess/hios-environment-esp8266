@@ -5,14 +5,6 @@
 #define MAX_LENGTH_API_PARAMS 16
 #define JSON_CONTEXT_BUFFER_SIZE 2048
 
-#define API_WIFI_SCAN_BAD_REQUEST -1
-#define API_WIFI_SCAN_REFRESH 0
-#define API_WIFI_SCAN_LIST 1
-
-typedef struct {
-    int8_t request;
-} WifiScanParams;
-
 typedef struct {
     uint8_t *data;
     uint16_t pos;
