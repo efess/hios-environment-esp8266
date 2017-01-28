@@ -3,6 +3,7 @@
 #include "jsonh.h"
 #include "info.h"
 #include "config.h"
+#include "run_state.h"
 
 void ICACHE_FLASH_ATTR print_api_bad_response(json_putchar putchar)
 {
@@ -39,7 +40,9 @@ void ICACHE_FLASH_ATTR print_api_get_response(json_putchar putchar)
     struct jsontree_context json_context;
     jsontree_setup(&json_context, (struct jsontree_value *) &setup_obj, putchar);
 
-    while(jsontree_print_next(&json_context)) {}
+    while(jsontree_print_next(&json_context)) {
+
+    }
 }
 
 void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, int8_t *err)
@@ -55,10 +58,9 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
     }
 
     jsonparse_next(json_state);
+    json_find_next_sibling_string(json_state, (uint8_t*)"ssid", value, sizeof(value), err);
     if(*err)
     {
-        INFO("err: %d\r\n", err);
-
         *err = API_SETUP_BAD_REQUEST;
         return;
     }
@@ -119,9 +121,16 @@ void ICACHE_FLASH_ATTR api_setup_request(void *context, uint8_t *req_buffer, uin
         parse_api_setup_data(&state, &err);
         if(err) 
         {
+            INFO("err??: %d\r\n", err);
             // reload values if they were mutated
             config_load();
             params->request = err;
+        } 
+        else 
+        {
+            config_save();
+
+            run_state.wifi_cfg_update = 1;
         }
     }
     else

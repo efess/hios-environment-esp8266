@@ -33,6 +33,7 @@
 #include "mqtt.h"
 #include "wifi.h"
 #include "gpio.h"
+#include "config.h"
 #include "user_interface.h"
 #include "mem.h"
 #include "websrv.h"
@@ -48,6 +49,8 @@ WebSrv webServer;
 static void ICACHE_FLASH_ATTR wifiConnectCb(uint8_t status)
 {
   if (status == STATION_GOT_IP) {
+    mqttClient.host = cfg.mqtt_host;
+    mqttClient.port = cfg.mqtt_port;
     MQTT_Connect(&mqttClient);
   } else {
     MQTT_Disconnect(&mqttClient);
@@ -115,6 +118,8 @@ void ICACHE_FLASH_ATTR print_info()
 
 static void ICACHE_FLASH_ATTR app_init(void)
 {
+  config_load();
+
   uart_init(BIT_RATE_115200, BIT_RATE_115200);
   print_info();
 
@@ -133,11 +138,12 @@ static void ICACHE_FLASH_ATTR app_init(void)
   MQTT_OnDisconnected(&mqttClient, mqttDisconnectedCb);
   MQTT_OnPublished(&mqttClient, mqttPublishedCb);
   MQTT_OnData(&mqttClient, mqttDataCb);
-
-  WIFI_Connect(STA_SSID, STA_PASS, wifiConnectCb);
+  
+  WIFI_SetStatusCallback(wifiConnectCb);
+  WIFI_StationMode(wifiConnectCb);
 
    // wifi scan has to after system init done.
-   system_init_done_cb(wifi_start_scan);
+  system_init_done_cb(wifi_start_scan);
 
   INFO("Free heap size: %u\r\n",  system_get_free_heap_size());
 

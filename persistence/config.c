@@ -3,7 +3,6 @@
 #include "osapi.h"
 #include "info.h"
 
-
 Config cfg;
 
 void ICACHE_FLASH_ATTR config_save() 
@@ -19,6 +18,7 @@ void ICACHE_FLASH_ATTR config_save()
         INFO("Config: Failure erasing sector for re-write\r\n");
         return;
     }
+
     spi_flash_write(save_location, (void *)&cfg, sizeof(cfg));
 
     // activate new config
@@ -35,4 +35,5 @@ void ICACHE_FLASH_ATTR config_load()
         CONFIG_FLASH_STARTB : CONFIG_FLASH_STARTA;
 
     spi_flash_read(save_location, (void *)&cfg, sizeof(cfg));
+    INFO("CONFIG Load SSID: %s\r\n", cfg.wifi_ssid);
 }

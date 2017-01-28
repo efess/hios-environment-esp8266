@@ -27,7 +27,7 @@ void json_dynamic_free_all();
     struct jsontree_pair name = {(field), (struct jsontree_value *)(&_json_tree_##name)};
 
 #define JSON_PAIR_INT(name, field, interger)                                           \
-    struct jsontree_int _json_tree_##name ={JSON_TYPE_NUMBER, (interger)};             \
+    struct jsontree_int _json_tree_##name ={JSON_TYPE_INT, (interger)};             \
     struct jsontree_pair name = {(field), (struct jsontree_value *)(&_json_tree_##name)};
 
 #define JSON_OBJECT(name, ...)                                     \

@@ -11,7 +11,19 @@
 
 #define WIFI_FAILED_ATTEMPS_MAX 3
 
+//defined in sdk
+// enum {
+//     STATION_IDLE = 0,
+//     STATION_CONNECTING,
+//     STATION_WRONG_PASSWORD,
+//     STATION_NO_AP_FOUND,
+//     STATION_CONNECT_FAIL,
+//     STATION_GOT_IP
+// };
+
 typedef void (*WifiCallback)(uint8_t);
-void ICACHE_FLASH_ATTR WIFI_Connect(uint8_t* ssid, uint8_t* pass, WifiCallback cb);
-void ICACHE_FLASH_ATTR WIFI_APMode();
+void WIFI_StationMode();
+void WIFI_APMode();
+void WIFI_SetStatusCallback(WifiCallback cb);
+
 #endif /* USER_WIFI_H_ */
