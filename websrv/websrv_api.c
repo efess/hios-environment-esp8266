@@ -4,7 +4,10 @@
 #include "info.h"
 #include "mem.h"
 #include "logic.h"
+#include "jsonh.h"
+#include "json/jsontree.h"
 #include "api_wifi_scan.h"
+#include "api_setup.h"
 
 static jsontree_buffer json_putchar_buffer;
 static int ICACHE_FLASH_ATTR _json_putchar(int c)
@@ -14,6 +17,18 @@ static int ICACHE_FLASH_ATTR _json_putchar(int c)
         return c;
     }
     return 0;
+}
+
+void ICACHE_FLASH_ATTR websrv_api_print_unknown_action()
+{
+    JSON_PAIR_STRING(error, "error", "Unknown action");
+
+    JSON_OBJECT(setup_obj, error);
+
+    struct jsontree_context json_context;
+    jsontree_setup(&json_context, (struct jsontree_value *) &setup_obj, _json_putchar);
+
+    while(jsontree_print_next(&json_context)) {}
 }
 
 void ICACHE_FLASH_ATTR websrv_api_init_putchar_buffer(uint8_t *buffer) 
@@ -50,6 +65,15 @@ void ICACHE_FLASH_ATTR websrv_api_request_body(void *context, uint8_t *resource,
     {
         api_wifi_scan_params(handler_context->request_params, data, length);
         api_print_wifi_scan(_json_putchar, handler_context->request_params);
+    }
+    else if(strcmp(handler_context->api_action, "setup") == 0)
+    {
+        api_setup_request(handler_context->request_params, data, length);
+        api_setup_response(_json_putchar, handler_context->request_params);
+    }
+    else
+    {
+        websrv_api_print_unknown_action();
     }
 
     handler_context->length = json_putchar_buffer.pos;

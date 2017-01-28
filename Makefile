@@ -53,8 +53,8 @@ USER_LIB				=
 LIB_MODULES			= mqtt
 
 SDK_LIBDIR = lib
-SDK_LIBS = c gcc phy pp net80211 wpa main lwip crypto ssl json driver
-SDK_INC = include include/json
+SDK_LIBS = c gcc phy pp net80211 wpa main lwip crypto ssl driver
+SDK_INC = include
 
 # Output directors to store intermediate compiled files
 # relative to the project directory

@@ -3,7 +3,7 @@
 #include "mem.h"
 #include "info.h"
 
-struct ICACHE_FLASH_ATTR jsonparse_state json_find_next_sibling(struct jsonparse_state *json_context, const char *name)
+int8_t ICACHE_FLASH_ATTR json_find_next_sibling(struct jsonparse_state *json_context, const char *name, struct jsonparse_state *found_json)
 {
     struct jsonparse_state local_context = *json_context;
     uint8_t depth = json_context->depth;
@@ -17,30 +17,27 @@ struct ICACHE_FLASH_ATTR jsonparse_state json_find_next_sibling(struct jsonparse
             local_context.depth == depth &&
             jsonparse_strcmp_value(&local_context, name) == 0)
         {
-            return local_context;
+            *found_json = local_context;
+            return JSON_OK;
         }
     }
 
-    return *json_context;
+    return JSON_NOT_FOUND;
 }
 
 /* returns nest available atomic value, does not affect state */
 void ICACHE_FLASH_ATTR json_find_next_sibling_string(struct jsonparse_state *json_context, const uint8_t *name, uint8_t *value, uint8_t val_length, int8_t *err)
 {
-    struct jsonparse_state local_context = json_find_next_sibling(json_context, name);
+    struct jsonparse_state local_context;
     uint8_t json_type;
 
-    if (local_context.pos == json_context->pos) {
+    if (json_find_next_sibling(json_context, name, &local_context) == JSON_NOT_FOUND) {
         *err = JSON_NOT_FOUND;
         // not found
         return;
     }
 
     json_type = jsonparse_next(&local_context);
-    if(json_type == ':') {
-        json_type = jsonparse_next(&local_context);
-    }
-
     if (json_type != JSON_TYPE_STRING)
     {
         *err = JSON_NOT_CORRECT_TYPE;
@@ -50,6 +47,26 @@ void ICACHE_FLASH_ATTR json_find_next_sibling_string(struct jsonparse_state *jso
     jsonparse_copy_value(&local_context, value, val_length);
 }
 
+/* returns nest available atomic value, does not affect state */
+void ICACHE_FLASH_ATTR json_find_next_sibling_int(struct jsonparse_state *json_context, const uint8_t *name, int *value, int8_t *err)
+{
+    struct jsonparse_state local_context;
+    uint8_t json_type;
+
+    if (json_find_next_sibling(json_context, name, &local_context) == JSON_NOT_FOUND) {
+        *err = JSON_NOT_FOUND;
+        // not found
+        return;
+    }
+
+    json_type = jsonparse_next(&local_context);
+    if (json_type != JSON_TYPE_INT)
+    {
+        *err = JSON_NOT_CORRECT_TYPE;
+        return;
+    }
+    *value = jsonparse_get_value_as_int(&local_context);
+}
 
 void* dynamic_allocs[JSON_MAX_DYNAMIC_ALLOCATIONS] = { 0 };
 uint8_t dynamic_allocs_count = 0;

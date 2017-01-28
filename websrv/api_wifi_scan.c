@@ -2,8 +2,6 @@
 #include "wifi_scan.h"
 #include "mem.h"
 #include "jsonh.h"
-#include "json/jsontree.h"
-#include "json/jsonparse.h"
 #include "info.h"
 
 void ICACHE_FLASH_ATTR api_wifi_scan_params(void *context, uint8_t *req_buffer, uint16_t length)

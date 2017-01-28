@@ -1,6 +1,8 @@
 #include "config.h"
 #include "spi_flash.h"
+#include "osapi.h"
 #include "info.h"
+
 
 Config cfg;
 

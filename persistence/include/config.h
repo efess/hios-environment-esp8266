@@ -20,5 +20,7 @@ typedef struct {
     uint8_t padding[3];
 } ConfigHeader;
 
+extern Config cfg;
+
 void config_save();
 void config_load();
