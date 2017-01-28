@@ -45,9 +45,9 @@ void ICACHE_FLASH_ATTR print_api_get_response(json_putchar putchar)
 void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, int8_t *err)
 {
     uint8_t value[33] = {0};
+    int intVal = 0;
     *err = 0;
 
-    INFO("API_SETUP 0\r\n");
     if(json_find_next_sibling(json_state, "setup", json_state) != JSON_OK)
     {
         *err = API_SETUP_BAD_REQUEST;
@@ -63,7 +63,6 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
         return;
     }
 
-    INFO("API_SETUP 2\r\n");
     os_strcpy(cfg.wifi_ssid, value);
 
     json_find_next_sibling_string(json_state, (uint8_t*)"password", value, sizeof(value), err);
@@ -82,18 +81,15 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
         return;
     }
 
-    INFO("API_SETUP 3\r\n");
     os_strcpy(cfg.mqtt_host, value);
     
-    json_find_next_sibling_int(json_state, (uint8_t*)"mqttPort", (int*)&cfg.mqtt_port, err);
+    json_find_next_sibling_int(json_state, (uint8_t*)"mqttPort", &intVal, err);
     if(*err)
     {
         *err = API_SETUP_BAD_REQUEST;
         return;
     }
-    
-    INFO("API_SETUP 4\r\n");
-    os_strcpy(cfg.mqtt_port, value);
+    cfg.mqtt_port = (uint16_t)intVal;
 }
 
 void ICACHE_FLASH_ATTR api_setup_request(void *context, uint8_t *req_buffer, uint16_t length)

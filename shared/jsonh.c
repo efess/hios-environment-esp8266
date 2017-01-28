@@ -60,7 +60,7 @@ void ICACHE_FLASH_ATTR json_find_next_sibling_int(struct jsonparse_state *json_c
     }
 
     json_type = jsonparse_next(&local_context);
-    if (json_type != JSON_TYPE_INT)
+    if (json_type != JSON_TYPE_NUMBER)
     {
         *err = JSON_NOT_CORRECT_TYPE;
         return;
