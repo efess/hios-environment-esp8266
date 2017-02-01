@@ -45,7 +45,6 @@
 MQTT_Client mqttClient;
 WebSrv webServer;
 
-
 static void ICACHE_FLASH_ATTR wifiConnectCb(uint8_t status)
 {
   if (status == STATION_GOT_IP) {

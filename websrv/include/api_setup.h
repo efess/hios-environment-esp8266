@@ -1,3 +1,6 @@
+#ifndef API_SETUP_H_
+#define API_SETUP_H_
+
 #include "user_interface.h"
 
 #define API_SETUP_INVALID_TYPE -3
@@ -12,3 +15,5 @@ typedef struct {
 
 void api_setup_request(void *context, uint8_t *req_buffer, uint16_t length);
 void api_setup_response(int (* json_putchar)(int c), uint8_t *params);
+
+#endif

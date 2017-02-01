@@ -5,9 +5,9 @@
 #include "mem.h"
 #include "logic.h"
 #include "jsonh.h"
-#include "json/jsontree.h"
 #include "api_wifi_scan.h"
 #include "api_setup.h"
+#include "api_status.h"
 
 static jsontree_buffer json_putchar_buffer;
 static int ICACHE_FLASH_ATTR _json_putchar(int c)
@@ -70,6 +70,11 @@ void ICACHE_FLASH_ATTR websrv_api_request_body(void *context, uint8_t *resource,
     {
         api_setup_request(handler_context->request_params, data, length);
         api_setup_response(_json_putchar, handler_context->request_params);
+    }
+    else if(strcmp(handler_context->api_action, "status") == 0)
+    {
+        api_status_request(handler_context->request_params, data, length);
+        api_status_response(_json_putchar, handler_context->request_params);
     }
     else
     {

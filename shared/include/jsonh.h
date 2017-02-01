@@ -30,10 +30,14 @@ void json_dynamic_free_all();
     struct jsontree_int _json_tree_##name ={JSON_TYPE_INT, (interger)};             \
     struct jsontree_pair name = {(field), (struct jsontree_value *)(&_json_tree_##name)};
 
+#define JSON_PAIR_OBJECT(name, field, obj)                                           \
+    struct jsontree_pair name = {(field), (struct jsontree_value *)(&obj)};
+
 #define JSON_OBJECT(name, ...)                                     \
     struct jsontree_pair jsontree_pair_##name[] = {__VA_ARGS__};   \
     struct jsontree_object name = {                                \
         JSON_TYPE_OBJECT,                                          \
         sizeof(jsontree_pair_##name)/sizeof(struct jsontree_pair), \
         jsontree_pair_##name }
+        
 #endif

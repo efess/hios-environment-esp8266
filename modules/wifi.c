@@ -52,8 +52,6 @@ static void ICACHE_FLASH_ATTR wifi_check_ip(void *arg)
   struct ip_info ipConfig;
   os_timer_disarm(&WiFiLinker);
 
-
-
   wifi_get_ip_info(STATION_IF, &ipConfig);
   wifiStatus = wifi_station_get_connect_status();
   

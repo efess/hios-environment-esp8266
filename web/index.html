@@ -77,6 +77,7 @@
     </style>
     <head></head>
     <body>
+        
         <div id='loading' class="sk-cube-grid">
             <div class="sk-cube sk-cube1"></div>
             <div class="sk-cube sk-cube2"></div>
@@ -89,34 +90,55 @@
             <div class="sk-cube sk-cube9"></div>
         </div>
         <div class="mui-container-fluid" id="content">
-            <div class="mui-row">
-                <div class="mui-col-sm-8 mui-col-sm-offset-2">
-                    <div class="space-top"></div>
-                    <div>Found Access Points</div>
-                    <div class="table-container">
-                        <table class="mui-table" id="wifi-aplist">
-                            <tbody>
 
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <div class="mui-panel">
+                <div class="mui-row">
+                    <div class="mui-col-sm-12">
+                        <div class="space-top"></div>
+                        <div>Found Access Points</div>
+                        <div class="table-container">
+                            <table class="mui-table" id="wifi-aplist">
+                                <tbody>
 
-            <div class="mui-row">
-                <div class="mui-col-sm-2 mui-col-sm-offset-2">
-                    <button id="refresh-aps" class="mui-btn mui-btn--raised">Refresh</button>
-                </div>
-                <div class="mui-col-sm-6">
-                    <div class="mui-textfield mui-textfield--float-label">
-                        <input type="text" id="ap-ssid">
-                        <label>ssid</label>
-                    </div>
-                    <div class="mui-textfield mui-textfield--float-label">
-                        <input type="password" id="ap-password">
-                        <label>Password</label>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+                <div class="mui-divider"></div>
+            <!--</div>
+            <div class="mui-panel">-->
+                <form id="wifi-setup-form">
+                    <div class="mui-row">
+                        <div class="mui-col-sm-6">
+                            <div class="mui-textfield mui-textfield--float-label">
+                                <input type="text" required id="ap-ssid">
+                                <label>ssid</label>
+                            </div>
+                            <div class="mui-textfield mui-textfield--float-label">
+                                <input type="password" id="ap-password">
+                                <label>Password</label>
+                            </div>
+                        </div>
+                        <div class="mui-col-sm-6">
+                            <div class="mui-textfield mui-textfield--float-label">
+                                <input type="text" required id="mqtt-host">
+                                <label>MQTT Host</label>
+                            </div>
+                            <div class="mui-textfield mui-textfield--float-label">
+                                <input type="number" required min="1" max="65535" id="mqtt-port">
+                                <label>MQTT Port</label>
+                            </div>
+                        </div>
+                    
+                    </div>
+                    <div class="mui-row">
+                        <div class="mui-col-sm-8">
+                            <button type="submit" id="set-ap" class="mui-btn mui-btn--raised mui-btn--primary">Set</button>
+                            <button id="refresh-aps" class="mui-btn mui-btn--raised ">Refresh</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </body>

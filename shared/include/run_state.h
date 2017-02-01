@@ -1,3 +1,6 @@
+#ifndef RUN_STATE_H_
+#define RUN_STATE_H_
+
 #include "user_interface.h"
 
 typedef struct {
@@ -5,3 +8,5 @@ typedef struct {
 } RunState;
 
 extern RunState run_state;
+
+#endif
