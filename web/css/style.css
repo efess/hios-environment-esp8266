@@ -19,9 +19,12 @@ button {
 }
 .table-container {
     height: 200px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
+#wifi-aplist {
+    border-collapse: collapse;
+}
 #wifi-aplist tbody {
     text-align: center
 }
@@ -36,6 +39,17 @@ button {
 .col-strength {
     width: 10%;
     text-align: right;
+}
+
+.modalWait {
+    width: 80%;
+    margin:0 auto;
+    display:table;
+    position: absolute;
+    left: 0;
+    right:0;
+    top: 30%; 
+    text-align: center;
 }
 
 .modalMain {

@@ -53,6 +53,7 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
 
     if(json_find_next_sibling(json_state, "setup", json_state) != JSON_OK)
     {
+        INFO("API Setup - setup object not found\r\n");
         *err = API_SETUP_BAD_REQUEST;
         return;
     }
@@ -61,6 +62,7 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
     json_find_next_sibling_string(json_state, (uint8_t*)"ssid", value, sizeof(value), err);
     if(*err)
     {
+        INFO("API Setup - ssid not found\r\n");
         *err = API_SETUP_BAD_REQUEST;
         return;
     }
@@ -70,6 +72,7 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
     json_find_next_sibling_string(json_state, (uint8_t*)"password", value, sizeof(value), err);
     if(*err)
     {
+        INFO("API Setup - password not found\r\n");
         *err = API_SETUP_BAD_REQUEST;
         return;
     }
@@ -79,6 +82,7 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
     json_find_next_sibling_string(json_state, (uint8_t*)"mqttHost", value, sizeof(value), err);
     if(*err)
     {
+        INFO("API Setup - mqttHost not found\r\n");
         *err = API_SETUP_BAD_REQUEST;
         return;
     }
@@ -88,6 +92,7 @@ void ICACHE_FLASH_ATTR parse_api_setup_data(struct jsonparse_state *json_state, 
     json_find_next_sibling_int(json_state, (uint8_t*)"mqttPort", &intVal, err);
     if(*err)
     {
+        INFO("API Setup - mqttPort not found\r\n");
         *err = API_SETUP_BAD_REQUEST;
         return;
     }

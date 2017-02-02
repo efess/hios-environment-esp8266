@@ -4,6 +4,7 @@ esp.wifiSetup = (function() {
     var apScanUrl = '/api/apscan';
     var setupUrl = '/api/setup';
     var elements = { };
+    var currentApList = [];
 
     function isApRow(el) {
       return esp.share.hasClass('ap-row', el);
@@ -12,12 +13,14 @@ esp.wifiSetup = (function() {
     document.addEventListener("DOMContentLoaded", function(event) { 
         elements.content = document.getElementById('content');
         elements.apTable = document.getElementById('wifi-aplist');
+        elements.wifiForm = document.getElementById('wifi-setup-form');
         elements.refreshAps = document.getElementById('refresh-aps');
         elements.refreshAps.addEventListener('click', sendRefresh);
         
         elements.setAp = document.getElementById('set-ap');
-        elements.setAp.addEventListener('click', sendSetup);
-        elements.setAp.addEventListener("submit", function (evt) {
+        //elements.setAp.addEventListener('click', sendSetup);
+        elements.wifiForm.addEventListener("submit", function (evt) {
+            sendSetup();
             evt.preventDefault();
             return false;
         });
@@ -67,7 +70,6 @@ esp.wifiSetup = (function() {
         anyTrueAnscestors(element.parentElement, fn) :
         false;
     }
-
     
     function rowClick(row) {
       var isSelected = esp.share.hasClass('ap-selected', row);
@@ -80,12 +82,7 @@ esp.wifiSetup = (function() {
 
       if(!isSelected) {
         esp.share.addClass('ap-selected', row);
-        var apObj = getAp(row.getAttribute('ap-id'));
-        elements.ssid.value = apObj.ssid;
-        
-        var evt = document.createEvent("HTMLEvents");
-        evt.initEvent("change", false, true);
-        elements.ssid.dispatchEvent(evt);
+        setMuiField(elements.ssid, row.getAttribute('ap-ssid'));
       }
     }
 
@@ -95,7 +92,7 @@ esp.wifiSetup = (function() {
     }
 
     function getSetup() {
-        esp.share.post(setupUrl, {type: 'get'})
+      modalWaitPromise(esp.share.post(setupUrl, {type: 'get'}))
         //getTest()
           .then(function(data){
             setMuiField(elements.ssid, data.ssid);
@@ -115,18 +112,21 @@ esp.wifiSetup = (function() {
         }
       };
 
-      esp.share.post(setupUrl, payload)
-      //setTest()
+      modalWaitPromise(esp.share.post(setupUrl, payload))
+      //modalWaitPromise(setTest())
         .then(function _success(data) {
           if(data.error) {
-            activateModal('Error: ' + data.error);
+            activateModalMessage('ESP Error: ' + data.error);
           } else {
-            activateModal('AP updated!');
+            activateModalMessage('AP updated, Rebooting..');
           }
-        }, function _fail(){})
+        }, function _fail(err){
+          activateModalMessage('Fail: ' + err);
+        });
     }
 
     function sendRefresh() {
+      elements.refreshAps.disabled = true;
       clearApList();
       var loading = elements.loading.cloneNode(true);
       loading.style.display = '';
@@ -145,6 +145,7 @@ esp.wifiSetup = (function() {
               } else if(data.status === 'FINISHED') {
                 populateApList(data.apList || []);
               }
+              elements.refreshAps.disabled = false;
             });
         }, 2000);
       };
@@ -163,32 +164,42 @@ esp.wifiSetup = (function() {
     }
 
     function clearApList(){
-        var tbody = elements.apTable.getElementsByTagName('tbody')[0];
-        if(tbody) {
-          tbody.remove();
-        }
+          elements.apTable.innerHTML = '';
     }
 
     function populateApList(apList) {
         clearApList();
         var rows = null;
         rows = crel('tbody', apList.map(function(ap, idx){
-          return crel('tr', {'class': 'ap-row', 'ap-id': idx}, 
+          return crel('tr', {'class': 'ap-row', 'ap-ssid': ap.ssid}, 
             crel('td', {'class': 'col-ssid'}, ap.ssid),
             crel('td', {'class': 'col-strength'}, ap.strength),
             crel('td', {'class': 'col-auth'}, ap.auth === 0 ? "Open" : "Secured"))
           }));
         elements.apTable.appendChild(rows); 
     }
-
-    function getAp(idx) {
-      //return data.apList[idx];
-      return {ssid:"TODO"};
-    }
-
-
-    function showReset() {}
+ 
+    function modalWaitPromise(promise) {
+      var options = {
+        'keyboard': false, // teardown when <esc> key is pressed (default: true)
+        'static': true, // maintain overlay when clicked (default: false)
+        'onclose': function() {} // execute function when overlay is closed
+      };
+      var loading = elements.loading.cloneNode(true);
+      loading.style.display = '';
+      elements.apTable.appendChild(crel('tbody',loading));
       
+      mui.overlay('on', options, crel('div', {'class': 'modalWait'}, loading));
+      return new Promise(function(resolve, reject) {
+        promise.then(function(data) {
+          mui.overlay('off');
+          resolve(data);
+        }, function(err) {
+          mui.overlay('off');
+          reject(err);
+        });
+      });
+    }
     function activateModalMessage(message) {
       var modalEl = crel('div', {'class': 'modalMain'},
         crel('div', {'class': 'modalMsg'}, message));
@@ -214,7 +225,10 @@ esp.wifiSetup = (function() {
 
     function setTest() {
       return new Promise(function(resolve, reject) {
-        resolve({"type":"set", "setup":{ "ssid":"Asus_Joes", "password":"fuckingshit", "mqttHost":"pihub.home.lan", "mqttPort":1880}});
+        setTimeout(function() {
+          resolve({"type":"set", "setup":{ "ssid":"Asus_Joes", "password":"fuckingshit", "mqttHost":"pihub.home.lan", "mqttPort":1880}});
+        }, 2000);
+        
       });
     }
     function getTest() {
