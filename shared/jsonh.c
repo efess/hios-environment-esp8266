@@ -3,6 +3,33 @@
 #include "mem.h"
 #include "info.h"
 
+static jsontree_buffer json_putchar_buffer;
+static int ICACHE_FLASH_ATTR _json_putchar(int c)
+{
+    if (json_putchar_buffer.pos < json_putchar_buffer.max_size) {
+        json_putchar_buffer.data[json_putchar_buffer.pos++] = c;
+        return c;
+    }
+    return 0;
+}
+
+json_putchar ICACHE_FLASH_ATTR json_get_putchar()
+{
+    return _json_putchar;
+}
+
+int ICACHE_FLASH_ATTR json_get_buffer_length()
+{
+    return json_putchar_buffer.pos;
+}
+
+void ICACHE_FLASH_ATTR json_init_putchar_buffer(uint8_t *buffer, uint16_t size) 
+{
+    json_putchar_buffer.data = buffer;
+    json_putchar_buffer.pos = 0;
+    json_putchar_buffer.max_size = size;
+}
+
 int8_t ICACHE_FLASH_ATTR json_find_next_sibling(struct jsonparse_state *json_context, const char *name, struct jsonparse_state *found_json)
 {
     struct jsonparse_state local_context = *json_context;

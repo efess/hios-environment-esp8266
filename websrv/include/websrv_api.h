@@ -6,11 +6,6 @@
 #define JSON_CONTEXT_BUFFER_SIZE 2048
 
 typedef struct {
-    uint8_t *data;
-    uint16_t pos;
-} jsontree_buffer;
-
-typedef struct {
     uint8_t response_data[JSON_CONTEXT_BUFFER_SIZE];
     uint8_t api_action[MAX_LENGTH_API_ACTION];
     uint8_t request_params[MAX_LENGTH_API_PARAMS];

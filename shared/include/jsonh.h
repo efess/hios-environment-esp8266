@@ -10,7 +10,17 @@
 #define JSON_NOT_CORRECT_TYPE -2
 #define JSON_MAX_DYNAMIC_ALLOCATIONS 128
 
+typedef struct {
+    uint8_t *data;
+    uint16_t pos;
+    uint16_t max_size;
+} jsontree_buffer;
+
 typedef int (* json_putchar)(int c);
+
+json_putchar json_get_putchar();
+int json_get_buffer_length();
+void json_init_putchar_buffer(uint8_t *buffer, uint16_t size);
 
 int8_t json_find_next_sibling(struct jsonparse_state *json_context, const char *name, struct jsonparse_state *found_json);
 void json_find_next_sibling_string(struct jsonparse_state *json_context, const uint8_t *name, uint8_t *value, uint8_t val_length, int8_t *err);
@@ -39,5 +49,5 @@ void json_dynamic_free_all();
         JSON_TYPE_OBJECT,                                          \
         sizeof(jsontree_pair_##name)/sizeof(struct jsontree_pair), \
         jsontree_pair_##name }
-        
+
 #endif

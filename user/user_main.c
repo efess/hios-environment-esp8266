@@ -40,6 +40,8 @@
 #include "info.h"
 #include "upgrade.h"
 #include "wifi_scan.h"
+#include "sensor_loop.h"
+
 #define TOPIC_OTA_UPGRADE  "/flash/available"
 
 MQTT_Client mqttClient;
@@ -61,15 +63,16 @@ static void ICACHE_FLASH_ATTR mqttConnectedCb(uint32_t *args)
   MQTT_Client* client = (MQTT_Client*)args;
   INFO("MQTT: Connected\r\n");
 
+  sensors_publisher(client);
+
   MQTT_Subscribe(client, TOPIC_OTA_UPGRADE, 0);
-
-  MQTT_Publish(client, "/mqtt/topic/0", "hello0", 6, 0, 0);
-
 }
 
 static void ICACHE_FLASH_ATTR mqttDisconnectedCb(uint32_t *args)
 {
   MQTT_Client* client = (MQTT_Client*)args;
+  
+  sensors_publisher(NULL);
   INFO("MQTT: Disconnected\r\n");
 }
 
@@ -122,7 +125,7 @@ static void ICACHE_FLASH_ATTR app_init(void)
   uart_init(BIT_RATE_115200, BIT_RATE_115200);
   print_info();
 
-  web_listen(&webServer, 8090);
+  web_listen(&webServer, 80);
 
   MQTT_InitConnection(&mqttClient, MQTT_HOST, MQTT_PORT, DEFAULT_SECURITY);
 
@@ -143,6 +146,8 @@ static void ICACHE_FLASH_ATTR app_init(void)
 
    // wifi scan has to after system init done.
   system_init_done_cb(wifi_start_scan);
+
+  sensors_init();
 
   INFO("Free heap size: %u\r\n",  system_get_free_heap_size());
 

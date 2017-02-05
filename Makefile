@@ -45,7 +45,7 @@ TARGET		?= esp_mqtt
 TARGET_LIB ?= libmqtt.a
 
 # which modules (subdirectories) of the project to include in compiling
-USER_MODULES		=  shared user driver mqtt modules http upgrade websrv persistence
+USER_MODULES		=  shared user driver mqtt modules http upgrade websrv persistence sensor
 USER_INC				= include
 USER_LIB				=
 

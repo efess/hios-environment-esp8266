@@ -9,16 +9,6 @@
 #include "api_setup.h"
 #include "api_status.h"
 
-static jsontree_buffer json_putchar_buffer;
-static int ICACHE_FLASH_ATTR _json_putchar(int c)
-{
-    if (json_putchar_buffer.pos < JSON_CONTEXT_BUFFER_SIZE) {
-        json_putchar_buffer.data[json_putchar_buffer.pos++] = c;
-        return c;
-    }
-    return 0;
-}
-
 void ICACHE_FLASH_ATTR websrv_api_print_unknown_action()
 {
     JSON_PAIR_STRING(error, "error", "Unknown action");
@@ -26,15 +16,9 @@ void ICACHE_FLASH_ATTR websrv_api_print_unknown_action()
     JSON_OBJECT(setup_obj, error);
 
     struct jsontree_context json_context;
-    jsontree_setup(&json_context, (struct jsontree_value *) &setup_obj, _json_putchar);
+    jsontree_setup(&json_context, (struct jsontree_value *) &setup_obj, json_get_putchar());
 
     while(jsontree_print_next(&json_context)) {}
-}
-
-void ICACHE_FLASH_ATTR websrv_api_init_putchar_buffer(uint8_t *buffer) 
-{
-    json_putchar_buffer.data = buffer;
-    json_putchar_buffer.pos = 0;
 }
 
 void ICACHE_FLASH_ATTR websrv_api_setup_context(void **context, uint8_t *resource, HttpRequest *request)
@@ -59,29 +43,29 @@ void ICACHE_FLASH_ATTR websrv_api_request_body(void *context, uint8_t *resource,
 {
     WebSrvApiContext *handler_context = (WebSrvApiContext*)context;
 
-    websrv_api_init_putchar_buffer(handler_context->response_data);
+    json_init_putchar_buffer(handler_context->response_data, JSON_CONTEXT_BUFFER_SIZE);
     
     if(strcmp(handler_context->api_action, "apscan") == 0)
     {
         api_wifi_scan_params(handler_context->request_params, data, length);
-        api_print_wifi_scan(_json_putchar, handler_context->request_params);
+        api_print_wifi_scan(json_get_putchar(), handler_context->request_params);
     }
     else if(strcmp(handler_context->api_action, "setup") == 0)
     {
         api_setup_request(handler_context->request_params, data, length);
-        api_setup_response(_json_putchar, handler_context->request_params);
+        api_setup_response(json_get_putchar(), handler_context->request_params);
     }
     else if(strcmp(handler_context->api_action, "status") == 0)
     {
         api_status_request(handler_context->request_params, data, length);
-        api_status_response(_json_putchar, handler_context->request_params);
+        api_status_response(json_get_putchar(), handler_context->request_params);
     }
     else
     {
         websrv_api_print_unknown_action();
     }
 
-    handler_context->length = json_putchar_buffer.pos;
+    handler_context->length = json_get_buffer_length();
 }
 
 uint32_t ICACHE_FLASH_ATTR websrv_api_response_body_size(void *context, uint8_t *resource)
