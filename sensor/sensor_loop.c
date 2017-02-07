@@ -9,7 +9,7 @@
 static ETSTimer _loopTimer;
 MQTT_Client *mqttClient;
 
-void print_bme280()
+void ICACHE_FLASH_ATTR print_bme280()
 {
     BME280_readSensorData();
 
@@ -45,12 +45,12 @@ void print_bme280()
     MQTT_Publish(mqttClient, topic, json_buffer, json_get_buffer_length(), 0, 0);
 }
 
-void sensors_publisher(MQTT_Client *client)
+void ICACHE_FLASH_ATTR sensors_publisher(MQTT_Client *client)
 {
     mqttClient = client;
 }
 
-void sensors_init(MQTT_Client *client)
+void ICACHE_FLASH_ATTR sensors_init(MQTT_Client *client)
 {
     BME280_Init(BME280_MODE_FORCED);
 
@@ -58,7 +58,7 @@ void sensors_init(MQTT_Client *client)
     os_timer_arm(&_loopTimer, SENSOR_INTERVAL, 0);
 }
 
-void sensors_capture(void *arg)
+void ICACHE_FLASH_ATTR sensors_capture(void *arg)
 {
     os_timer_disarm(&_loopTimer);
 

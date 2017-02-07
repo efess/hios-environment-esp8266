@@ -41,6 +41,7 @@
 #include "upgrade.h"
 #include "wifi_scan.h"
 #include "sensor_loop.h"
+#include "lcd.h"
 
 #define TOPIC_OTA_UPGRADE  "/flash/available"
 
@@ -62,7 +63,7 @@ static void ICACHE_FLASH_ATTR mqttConnectedCb(uint32_t *args)
 {
   MQTT_Client* client = (MQTT_Client*)args;
   INFO("MQTT: Connected\r\n");
-
+  MQTT_Publish(client, "/mqtt/topic/0", "hello0", 6, 0, 0);
   sensors_publisher(client);
 
   MQTT_Subscribe(client, TOPIC_OTA_UPGRADE, 0);
@@ -129,7 +130,9 @@ static void ICACHE_FLASH_ATTR app_init(void)
 
   MQTT_InitConnection(&mqttClient, MQTT_HOST, MQTT_PORT, DEFAULT_SECURITY);
 
-  if ( !MQTT_InitClient(&mqttClient, MQTT_CLIENT_ID, MQTT_USER, MQTT_PASS, MQTT_KEEPALIVE, MQTT_CLEAN_SESSION) )
+  uint8_t client_id[20] = {0};
+  os_sprintf(client_id, "ESP_%u", system_get_chip_id());
+  if ( !MQTT_InitClient(&mqttClient, client_id, MQTT_USER, MQTT_PASS, MQTT_KEEPALIVE, MQTT_CLEAN_SESSION) )
   {
     INFO("Failed to initialize properly. Check MQTT version.\r\n");
     return;
@@ -148,7 +151,7 @@ static void ICACHE_FLASH_ATTR app_init(void)
   system_init_done_cb(wifi_start_scan);
 
   sensors_init();
-
+  lcd_start();
   INFO("Free heap size: %u\r\n",  system_get_free_heap_size());
 
 }

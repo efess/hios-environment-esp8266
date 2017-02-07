@@ -435,7 +435,7 @@ unsigned long int ICACHE_FLASH_ATTR BME280_GetHumidity(){
 	return hum_act;
 }
 
-signed long int BME280_calibration_Temp(signed long int adc_T)
+signed long int ICACHE_FLASH_ATTR BME280_calibration_Temp(signed long int adc_T)
 {
 
     signed long int var1, var2, T;
@@ -447,7 +447,7 @@ signed long int BME280_calibration_Temp(signed long int adc_T)
     return T;
 }
 
-unsigned long int BME280_calibration_Press(signed long int adc_P)
+unsigned long int ICACHE_FLASH_ATTR BME280_calibration_Press(signed long int adc_P)
 {
     signed long int var1, var2;
     unsigned long int P;
@@ -472,7 +472,7 @@ unsigned long int BME280_calibration_Press(signed long int adc_P)
     return P;
 }
 
-unsigned long int BME280_calibration_Hum(signed long int adc_H)
+unsigned long int ICACHE_FLASH_ATTR BME280_calibration_Hum(signed long int adc_H)
 {
     signed long int v_x1;
 
