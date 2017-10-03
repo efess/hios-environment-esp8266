@@ -100,13 +100,18 @@ uint16_t ICACHE_FLASH_ATTR http_write_response_header(HttpResponse *res, uint8_t
 uint8_t ICACHE_FLASH_ATTR http_get_host_from_url(const uint8_t* url, uint8_t* host)
 {
 	uint8_t *httpEnd = strstr(url, "://");
+	uint8_t *hostEnd = 0;
 	if (!httpEnd) {
 		INFO("HTTP: Invalid URL.\r\n");
 		return -1;
 	}
 	httpEnd += 3;
 
-	uint8_t *hostEnd = strstr(httpEnd, "/");
+	hostEnd = strstr(httpEnd, ":");
+	if(!hostEnd)
+	{
+		hostEnd = strstr(httpEnd, "/");
+	}
 	if (!hostEnd) {
 		INFO("HTTP: Invalid URL.\r\n");
 		return -1;

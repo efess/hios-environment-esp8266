@@ -108,5 +108,7 @@ void adafruit_ili9341_invertDisplay(ili9341_lcd *lcd, bool i);
 
 uint16_t adafruit_ili9341_color565(uint8_t r, uint8_t g, uint8_t b);
 
+void ili9341_drawSingleBitBitmap(ili9341_lcd *lcd,  int16_t x, int16_t y,
+    uint8_t *bitmap, int16_t w, int16_t h);
 
 #endif

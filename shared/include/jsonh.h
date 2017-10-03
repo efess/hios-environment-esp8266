@@ -25,6 +25,7 @@ void json_init_putchar_buffer(uint8_t *buffer, uint16_t size);
 int8_t json_find_next_sibling(struct jsonparse_state *json_context, const char *name, struct jsonparse_state *found_json);
 void json_find_next_sibling_string(struct jsonparse_state *json_context, const uint8_t *name, uint8_t *value, uint8_t val_length, int8_t *err);
 void json_find_next_sibling_int(struct jsonparse_state *json_context, const uint8_t *name, int *value, int8_t *err);
+uint8_t json_find_next_element(struct jsonparse_state *json_context, struct jsonparse_state *found_json);
 
 struct jsontree_object * json_dynamic_create_object(uint8_t count);
 struct jsontree_pair * json_dynamic_create_pairs(uint8_t count);

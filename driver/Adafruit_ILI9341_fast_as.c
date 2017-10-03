@@ -182,6 +182,38 @@ void ICACHE_FLASH_ATTR adafruit_ili9341_drawPixel(ili9341_lcd *lcd, int16_t x, i
     adafruit_ili9341_transmitData_nr(SWAPBYTES(color));
 }
 
+void ICACHE_FLASH_ATTR ili9341_drawSingleBitBitmap(ili9341_lcd *lcd, int16_t x, int16_t y,
+    uint8_t *bitmap, int16_t w, int16_t h) {
+
+    uint8_t *bmpBuf = bitmap + 10;
+    uint32_t offset = (bmpBuf[3] << 24) | (bmpBuf[2] << 16) | (bmpBuf[1] << 8) | bmpBuf[0];
+    
+    bmpBuf = bitmap + offset;
+    
+    uint8_t row_byte_length = w / 8;
+    row_byte_length = row_byte_length + (4 - (row_byte_length % 4));
+
+    uint8_t bmpIdx = 0;
+    uint8_t bmpBit = 0;
+    uint16_t rowStart = 0;
+    uint16_t byteIdx = 0;
+    uint16_t color = 0;
+    
+    if((x < 0) ||(x >= lcd->_width) || (y < 0) || (y >= lcd->_height)) return;
+    setAddrWindow(lcd, x, y, (x+w)-1,(y+h)-1);
+
+    for(uint16_t j=0; j <h ; j++) {
+        rowStart = (h - j) * row_byte_length;
+        for(uint16_t i=0; i<w; i++ ) {
+            byteIdx = rowStart + (i / 8);
+            bmpBit = 7 - (i % 8);
+
+            color = (bmpBuf[byteIdx] >> bmpBit) & 1 == 1 ? 0xFFFF : 0x0000;
+            adafruit_ili9341_transmitData_nr(SWAPBYTES(color));
+            //adafruit_ili9341_drawPixel(lcd, x+i, y+j, color);
+        }
+    }
+}
 
 void ICACHE_FLASH_ATTR adafruit_ili9341_drawFastVLine(ili9341_lcd *lcd, int16_t x, int16_t y, int16_t h,
         uint16_t color) {

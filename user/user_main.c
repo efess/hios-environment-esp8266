@@ -42,20 +42,22 @@
 #include "wifi_scan.h"
 #include "sensor_loop.h"
 #include "lcd.h"
-
+#include "weather.h"
 #define TOPIC_OTA_UPGRADE  "/flash/available"
 
-MQTT_Client mqttClient;
+MQTT_Client *mqttClient;
 WebSrv webServer;
 
 static void ICACHE_FLASH_ATTR wifiConnectCb(uint8_t status)
 {
   if (status == STATION_GOT_IP) {
-    mqttClient.host = cfg.mqtt_host;
-    mqttClient.port = cfg.mqtt_port;
-    MQTT_Connect(&mqttClient);
+    mqttClient->host = cfg.mqtt_host;
+    mqttClient->port = cfg.mqtt_port;
+    MQTT_Connect(mqttClient);
+    weather_start();
   } else {
-    MQTT_Disconnect(&mqttClient);
+    MQTT_Disconnect(mqttClient);
+    weather_stop();
   }
 }
 
@@ -63,17 +65,13 @@ static void ICACHE_FLASH_ATTR mqttConnectedCb(uint32_t *args)
 {
   MQTT_Client* client = (MQTT_Client*)args;
   INFO("MQTT: Connected\r\n");
-  MQTT_Publish(client, "/mqtt/topic/0", "hello0", 6, 0, 0);
-  sensors_publisher(client);
 
   MQTT_Subscribe(client, TOPIC_OTA_UPGRADE, 0);
 }
 
 static void ICACHE_FLASH_ATTR mqttDisconnectedCb(uint32_t *args)
 {
-  MQTT_Client* client = (MQTT_Client*)args;
-  
-  sensors_publisher(NULL);
+  MQTT_Client* client = (MQTT_Client*)args; 
   INFO("MQTT: Disconnected\r\n");
 }
 
@@ -121,6 +119,7 @@ void ICACHE_FLASH_ATTR print_info()
 
 static void ICACHE_FLASH_ATTR app_init(void)
 {
+  mqttClient = (MQTT_Client*)os_zalloc(sizeof(MQTT_Client));
   config_load();
 
   uart_init(BIT_RATE_115200, BIT_RATE_115200);
@@ -128,28 +127,28 @@ static void ICACHE_FLASH_ATTR app_init(void)
 
   web_listen(&webServer, 80);
 
-  MQTT_InitConnection(&mqttClient, MQTT_HOST, MQTT_PORT, DEFAULT_SECURITY);
+  MQTT_InitConnection(mqttClient, MQTT_HOST, MQTT_PORT, DEFAULT_SECURITY);
 
   uint8_t client_id[20] = {0};
   os_sprintf(client_id, "ESP_%u", system_get_chip_id());
-  if ( !MQTT_InitClient(&mqttClient, client_id, MQTT_USER, MQTT_PASS, MQTT_KEEPALIVE, MQTT_CLEAN_SESSION) )
+  if ( !MQTT_InitClient(mqttClient, client_id, MQTT_USER, MQTT_PASS, MQTT_KEEPALIVE, MQTT_CLEAN_SESSION) )
   {
     INFO("Failed to initialize properly. Check MQTT version.\r\n");
     return;
   }
   
-  MQTT_InitLWT(&mqttClient, "/lwt", "offline", 0, 0);
-  MQTT_OnConnected(&mqttClient, mqttConnectedCb);
-  MQTT_OnDisconnected(&mqttClient, mqttDisconnectedCb);
-  MQTT_OnPublished(&mqttClient, mqttPublishedCb);
-  MQTT_OnData(&mqttClient, mqttDataCb);
+  MQTT_InitLWT(mqttClient, "/lwt", "offline", 0, 0);
+  MQTT_OnConnected(mqttClient, mqttConnectedCb);
+  MQTT_OnDisconnected(mqttClient, mqttDisconnectedCb);
+  MQTT_OnPublished(mqttClient, mqttPublishedCb);
+  MQTT_OnData(mqttClient, mqttDataCb);
   
   WIFI_SetStatusCallback(wifiConnectCb);
   WIFI_StationMode(wifiConnectCb);
 
    // wifi scan has to after system init done.
   system_init_done_cb(wifi_start_scan);
-
+  weather_init();
   sensors_init();
   lcd_start();
   INFO("Free heap size: %u\r\n",  system_get_free_heap_size());

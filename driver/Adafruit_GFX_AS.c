@@ -30,7 +30,8 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include "osapi.h"
+#include "info.h"
 #include "driver/Adafruit_GFX_AS.h"
 
 #include "driver/mini-printf.h"
@@ -480,9 +481,9 @@ int ICACHE_FLASH_ATTR drawUnicode(ili9341_lcd *lcd, uint16_t uniCode, uint16_t x
  ***************************************************************************************/
 int ICACHE_FLASH_ATTR drawNumber(ili9341_lcd *lcd, long long_num,uint16_t poX, uint16_t poY, uint8_t size)
 {
-    char tmp[10];
-    if (long_num < 0) snprintf(tmp, sizeof(tmp), "%d", long_num);
-    else snprintf(tmp, sizeof(tmp), "%u", long_num);
+    char tmp[10]= {0};
+    if (long_num < 0) mini_snprintf(tmp, 10, "%d", long_num);
+    else mini_snprintf(tmp, 10,  "%u", long_num);
     return drawString(lcd, tmp, poX, poY, size);
 }
 

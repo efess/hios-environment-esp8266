@@ -95,6 +95,27 @@ void ICACHE_FLASH_ATTR json_find_next_sibling_int(struct jsonparse_state *json_c
     *value = jsonparse_get_value_as_int(&local_context);
 }
 
+uint8_t json_find_next_element(struct jsonparse_state *json_context, struct jsonparse_state *found_json)
+{
+    struct jsonparse_state local_context = *json_context;
+    uint8_t depth = json_context->depth;
+    uint8_t type = 0;
+
+    while (jsonparse_has_next(&local_context))
+    {
+        type = jsonparse_next(&local_context);
+
+        if (type == ',' &&
+            local_context.depth == depth)
+        {
+            *found_json = local_context;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 void* dynamic_allocs[JSON_MAX_DYNAMIC_ALLOCATIONS] = { 0 };
 uint8_t dynamic_allocs_count = 0;
 

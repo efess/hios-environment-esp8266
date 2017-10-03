@@ -1,3 +1,3 @@
 #include "run_state.h"
 
-RunState run_state = {0};
+RunState run_state;

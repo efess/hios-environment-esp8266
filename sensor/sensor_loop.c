@@ -3,11 +3,12 @@
 #include "mqtt.h"
 #include "info.h"
 #include "jsonh.h"
+#include "run_state.h"
+#include "mqttclient.h"
 
 #define MQTT_TOPIC_ENV "/device/%u/environment"
 
 static ETSTimer _loopTimer;
-MQTT_Client *mqttClient;
 
 void ICACHE_FLASH_ATTR print_bme280()
 {
@@ -21,6 +22,10 @@ void ICACHE_FLASH_ATTR print_bme280()
     // INFO("PRES: %u\r\n", pres);
     // INFO("HUMID: %u\r\n", humid);
     
+    run_state.temp = BME280_GetTemperature() / 100;
+    run_state.pressure = BME280_GetPressure();
+    run_state.humidity = BME280_GetHumidity() / 1000    ;
+
     if(!mqttClient) {
         return;
     }
@@ -30,9 +35,9 @@ void ICACHE_FLASH_ATTR print_bme280()
 
     json_init_putchar_buffer(json_buffer, sizeof(json_buffer));
 
-    JSON_PAIR_INT(temp, "temp", BME280_GetTemperature());
-    JSON_PAIR_INT(pres, "pres", BME280_GetPressure());
-    JSON_PAIR_INT(humid, "humid", BME280_GetHumidity());
+    JSON_PAIR_INT(temp, "temp", run_state.temp);
+    JSON_PAIR_INT(pres, "pres", run_state.pressure);
+    JSON_PAIR_INT(humid, "humid", run_state.humidity);
 
     JSON_OBJECT(dataz, temp, pres, humid);
 
@@ -42,15 +47,11 @@ void ICACHE_FLASH_ATTR print_bme280()
     while(jsontree_print_next(&json_context)) {}
 
     os_sprintf(topic, MQTT_TOPIC_ENV, system_get_chip_id());
-    MQTT_Publish(mqttClient, topic, json_buffer, json_get_buffer_length(), 0, 0);
+    
+    MQTT_Publish(mqttClient, topic, json_buffer, json_get_buffer_length() + 1, 0, 0);
 }
 
-void ICACHE_FLASH_ATTR sensors_publisher(MQTT_Client *client)
-{
-    mqttClient = client;
-}
-
-void ICACHE_FLASH_ATTR sensors_init(MQTT_Client *client)
+void ICACHE_FLASH_ATTR sensors_init()
 {
     BME280_Init(BME280_MODE_FORCED);
 

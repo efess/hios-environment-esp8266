@@ -10,7 +10,7 @@ esp.share = (function() {
         },
         removeClass: function(className, element) {
             return element.className = element.className.replace(new RegExp('(?:^|\\s)'+ className + '(?:\\s|$)'), '');
-        },
+        },  
         findAncestor: function(matchFn, element) {
             if(element.parentElement) {
                 var parent = element.parentElement;
