@@ -45,5 +45,6 @@ uint16_t http_parse_request_header(HttpRequest *request, uint8_t *buf, uint16_t 
 uint16_t http_write_request_header(HttpRequest *req, uint8_t *buf, uint16_t maxlen);
 uint16_t http_parse_response_header(HttpResponse *response, uint8_t *buf, uint16_t length, int* err);
 uint16_t http_write_response_header(HttpResponse *res, uint8_t *buf, uint16_t maxlen);
+uint8_t ICACHE_FLASH_ATTR http_get_port_from_url(const uint8_t* url, uint16_t* host);
 
 #endif

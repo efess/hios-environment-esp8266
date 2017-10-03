@@ -97,6 +97,42 @@ uint16_t ICACHE_FLASH_ATTR http_write_response_header(HttpResponse *res, uint8_t
 	return byte_counter;
 }
 
+uint8_t ICACHE_FLASH_ATTR http_get_port_from_url(const uint8_t* url, uint16_t* port)
+{
+	uint8_t *httpEnd = strstr(url, "://");
+	uint8_t *hostEnd = 0;
+	uint8_t *portEnd = 0;
+	uint8_t portStr[6];
+
+	if (!httpEnd) {
+		INFO("HTTP: Invalid URL.\r\n");
+		return -1;
+	}
+	httpEnd += 3;
+
+	hostEnd = strstr(httpEnd, ":");
+	if (!hostEnd)
+	{
+		*port = 80;
+		return 0;
+	}
+	portEnd = strstr(hostEnd, "/");
+	if (!portEnd) {
+		portEnd = ((uint8_t*)url + strlen(url));
+	}
+	hostEnd++;
+	if (portEnd - hostEnd > 5) {
+		INFO("HTTP: Invalid URL. Port out of bounds.\r\n");
+		return -1;
+	}
+
+	strncpy(portStr, hostEnd, portEnd - hostEnd);
+	portStr[portEnd - hostEnd] = 0;
+
+	*port = atoi(portStr);
+
+	return 0;
+}
 uint8_t ICACHE_FLASH_ATTR http_get_host_from_url(const uint8_t* url, uint8_t* host)
 {
 	uint8_t *httpEnd = strstr(url, "://");

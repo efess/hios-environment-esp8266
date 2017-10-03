@@ -6,7 +6,6 @@
 #include "jsonh.h"
 #include "user_config.h"
 
-
 WeatherState *weather_state;
 static ETSTimer _weather_update_timer;
 
@@ -124,7 +123,7 @@ void ICACHE_FLASH_ATTR weather_parse_json(uint8_t *buf)
     // }
 }
 
-void ICACHE_FLASH_ATTR weather_connected_cb(void *arg)
+void ICACHE_FLASH_ATTR  weather_connected_cb(void *arg)
 {
     struct espconn *con = (struct espconn *)arg;
     uint16_t byte_count;
@@ -210,6 +209,10 @@ void ICACHE_FLASH_ATTR weather_download(void *arg)
 {
     INFO("Weather Start - free heap size: %u\r\n",  system_get_free_heap_size());
     os_timer_disarm(&_weather_update_timer);
+    uint16_t port = 0;
+    if(http_get_port_from_url(WEATHER_URL, &port) < 0) {
+        return;
+    }
 
     weather_get_context *get_context = (weather_get_context*)os_zalloc(sizeof(weather_get_context));
 
@@ -217,7 +220,7 @@ void ICACHE_FLASH_ATTR weather_download(void *arg)
     get_context->con->type = ESPCONN_TCP;
     get_context->con->state = ESPCONN_NONE;
     get_context->con->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
-    get_context->con->proto.tcp->remote_port = 8080;
+    get_context->con->proto.tcp->remote_port = port;
     get_context->con->proto.tcp->local_port = espconn_port();
     get_context->con->reverse = get_context;
 
